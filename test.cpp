@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <iostream>
 #include <unistd.h>
+#include <fcntl.h>
 
 int main (int argc, char *argv[])
 {
@@ -27,26 +28,30 @@ int main (int argc, char *argv[])
 		return 1;
 
 	int sockfd = socket(res->ai_family,res->ai_socktype,res->ai_protocol);
+	fcntl(sockfd, F_SETFL, O_NONBLOCK);
 	if (bind(sockfd,res->ai_addr,res->ai_addr->sa_len))
 		return 2;
 	std::cout << "the server waits for a request" << std::endl;
 	std::cout << std::endl << std::endl;
 
 	listen(sockfd,20);
-	socklen_t addr_size = sizeof communication;
-	int fd_com = accept(sockfd, &communication, &addr_size);
-	char buf[10000];
-	recv(fd_com,buf,100000,0);
-	std::cout << "the server recv : " << std::endl << std::endl << buf << std::endl;
-	std::string msg = "HTTP/1.1 200 OK\r\n";
-	msg += "Content-Type: text/html\r\n";
-	msg += "\r\n";
-	msg += "<html>  <body> <h1> younes nadi<h1> <h2> hicham nadi bl7e9 younes hssen</h2> </body> </html>\r\n";
-	send(fd_com,msg.c_str(),strlen(msg.c_str()),0);
-	shutdown(fd_com,2);
-	shutdown(sockfd,2);
-	close(fd_com);
-	close(sockfd);
-	std::cout << "the server stop" << std::endl;
+	while (1)
+	{
+		socklen_t addr_size = sizeof communication;
+		int fd_com = accept(sockfd, &communication, &addr_size);
+		char buf[10000];
+		ssize_t s = recv(fd_com,buf,100000,0);
+		buf[s] = 0;
+		std::cout << "req: " << buf << '\n';
+		//std::cout << "the server recv : " << std::endl << std::endl << buf << std::endl;
+		std::string msg = "HTTP/1.1 200 OK\r\n";
+		msg += "Content-Type: text/html\r\n";
+		msg += "Content-Length: 93\r\n";
+		msg += "\r\n";
+		msg += "<html>  <body> <h1> younes nadi<h1> <h2> hicham nadi bl7e9 younes hssen</h2> </body> </html>\r\n";
+		send(fd_com,msg.c_str(),strlen(msg.c_str()),0);
+		std::cout << "the server stop" << std::endl;
+		shutdown(fd_com, 2);
+	}
 	return 0;
 }
