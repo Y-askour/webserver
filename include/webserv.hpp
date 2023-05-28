@@ -1,4 +1,10 @@
 #pragma once
 
+
 #include <iostream>
-void parse_config_file();
+#include <string>
+#include <fstream>
+
+/**** functions definitions  ****/
+
+void parse_config_file(std::string file_name);
