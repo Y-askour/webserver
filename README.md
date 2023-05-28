@@ -1,7 +1,7 @@
 ### **1-** read the config file 
 
 ### **2-** parss the config file in class
-	- [][How to parse Nginx configuratilon files?] (https://stackoverflow.com/questions/11240422/how-to-parse-nginx-configuratilon-files)
+- [ ] [How to parse Nginx configuratilon files?] (https://stackoverflow.com/questions/11240422/how-to-parse-nginx-configuratilon-files)
 
 ### **3-** open socket and bind it to the config file port
 
