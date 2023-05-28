@@ -2,6 +2,7 @@
 
 ### **2-** parss the config file in class
 - [ ] [How to parse Nginx configuratilon files?](https://stackoverflow.com/questions/11240422/how-to-parse-nginx-configuratilon-files)
+- [understanding-the-nginx-configuration-file](https://www.digitalocean.com/community/tutorials/understanding-the-nginx-configuration-file-structure-and-configuration-contexts)
 
 ### **3-** open socket and bind it to the config file port
 
