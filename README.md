@@ -6,6 +6,7 @@
 ### **3-** open socket and bind it to the config file port
 
 ### **4-** accept requests and parss the requests
+-[a usefule link about blocking fd](https://www.linuxtoday.com/blog/blocking-and-non-blocking-i-0/)
 
 ### **5-** send a response using the route that exists in the requests
 - [ ] Define some defaults errors pages for 404 - 503 ...
