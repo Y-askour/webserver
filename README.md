@@ -8,6 +8,6 @@
 ### **4-** accept requests and parss the requests
 
 ### **5-** send a response using the route that exists in the requests
-	[] Define some defaults errors pages for 404 - 503 ...
+	- [] Define some defaults errors pages for 404 - 503 ...
 	-[  ] the server needs to accept this methods : POST / GET / DELETE
 
