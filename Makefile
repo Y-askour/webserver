@@ -1,0 +1,2 @@
+NAME = webserv
+CC = c++
