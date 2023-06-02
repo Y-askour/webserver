@@ -1,2 +1,20 @@
 First i have to parse the file
 also if the file was empty u have to give a default file
+parse mime type too
+
+*THIS IS MY CONFIG FILE KEYWORDS:
+-also outside of the server only comments and newline and allowed.
+-#ll = comments.
+-listen = listen in a port only use in the server.
+-status_page = use "status_page 404 path", only use in server and it sets by default if not specify.
+-allow_methods = specify the method u want, use in the server and the location.
+-server_name = here sepecify the server name, only use in server.
+-root = use "root path", use in server and location.
+-index = use "index name name...", use in server and location.
+-autoindex = use "off/on", it's set to off by default, use in server and location.
+-client_max_body_size = use "number", size of body response, use in server and location.
+-mime_types = give mime file, use in server and location, if not specify it sets by default.
+-location path {} = sets the location and parameter.
+-return = use "return 'id status' "path" " redirect to a path, use only in location.
+-cgi_info = use "cgi_info '.extention' 'path'" specify the binary code that gonna run the file.
+-upload = use "upload on/off", use only in location, it sets to off by default if not specify.
