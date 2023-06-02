@@ -13,5 +13,6 @@
 -
 
 ### **5-** send a response using the route that exists in the requests
+- [Synchronous I/O Multiplexing](https://www.youtube.com/watch?v=oD94jnuOHLM)
 - [ ] Define some defaults errors pages for 404 - 503 ...
 - [ ] the server needs to accept this methods : POST / GET / DELETE
