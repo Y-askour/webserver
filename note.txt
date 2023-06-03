@@ -3,7 +3,7 @@ also if the file was empty u have to give a default file
 parse mime type too
 
 *THIS IS MY CONFIG FILE KEYWORDS:
--also outside of the server only comments and newline and allowed.
+-outside of the server only comments and newline are allowed.
 -#ll = comments.
 -listen = listen in a port only use in the server.
 -status_page = use "status_page 404 path", only use in server and it sets by default if not specify.
@@ -18,3 +18,6 @@ parse mime type too
 -return = use "return 'id status' "path" " redirect to a path, use only in location.
 -cgi_info = use "cgi_info '.extention' 'path'" specify the binary code that gonna run the file.
 -upload = use "upload on/off", use only in location, it sets to off by default if not specify.
+
+TODO in parsing:
+-just skip all comments
