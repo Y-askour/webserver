@@ -8,6 +8,6 @@ int	main(int ac, char **av)
 		return (1);
 	}
 	parsing	data(av[1]);
-	data.tokenizer();
+	data.parse_file();
 	return (0);
 }

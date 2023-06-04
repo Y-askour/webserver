@@ -16,8 +16,12 @@ parse mime type too
 -mime_types = give mime file, use in server and location, if not specify it sets by default.
 -location path {} = sets the location and parameter.
 -return = use "return 'id status' "path" " redirect to a path, use only in location.
--cgi_info = use "cgi_info '.extention' 'path'" specify the binary code that gonna run the file.
+-cgi_info = use "cgi_info '.extention' 'path'" specify the binary code that gonna run the file, use in location and server.
 -upload = use "upload on/off", use only in location, it sets to off by default if not specify.
+
+Grammer BNF:
+
 
 TODO in parsing:
 -just skip all comments
+-add flag -t
