@@ -2,6 +2,25 @@
 
 parsing::parsing(std::string file) : config_file(file)
 {
+	std::pair<int, std::string> data;
+	std::string	directives = "listen host mime_types server_name status_page return root index allow_methods client_max_body_size autoindex cgi_info upload ";
+	for (int	i = 0, key = 0; !directives.empty(); i++)
+	{
+		if (i == 5)
+			key = 1;
+		else if (i > 5)
+			key = 2;
+		//key = (key == 5) ? 1 : 0;
+		data.first = key;
+		data.second = directives.substr(0, directives.find(' '));
+		directives.erase(0, directives.find(' ') + 1);
+		this->directive_name.push_back(data);
+	}
+
+	//for (int i = 0; i < (int)this->directive_id.size(); i++)
+	//{
+	//	std::cout << "|" << this->directive_id[i].first << "|" << this->directive_id[i].second << "|"<< std::endl;
+	//}
 	//constructer
 }
 
@@ -186,48 +205,39 @@ void	parsing::turn_whitespaces_to_space(void)
 
 void	parsing::parse_file(void)
 {
-	std::ifstream	in;
-
-	in.open(this->config_file);
-	if (!in.is_open())
+	try
 	{
-		std::cerr << "Error: file not exist" << std::endl;
-		exit(1);
-	}
-	std::getline(in, this->input, '\0');
-	//here always check if the file empty or full 
-	//if (!this->input[0])
-	if (this->input.empty())
-	{
-		std::cerr << "Error: empty config file" << std::endl;
-		exit(1);
-		//here error only
-		//here provide a default config file
-	}
-	//first take off comments #
-	this->take_off_comments();
-	//second change all whitespaces to ' ' space
-	//third trim the string
-	this->turn_whitespaces_to_space();
-
-	//fourth start tokenizing
-	this->tokenizer();
-
-	//fifth start lexer and grammer BNF
-	this->lexer();
-
-	//maybe here use try and catch
+		std::ifstream	in;
 	
-
-
-
-	//std::cout << this->input << std::endl;
-
-	//here print the tokenizer vector
-	for (int i = 0; i < static_cast<int>(this->tokens.size()); i++)
-		std::cout << "|" << this->tokens[i].first << "|   |" << this->tokens[i].second << "|" << std::endl;
-
-
+		in.open(this->config_file);
+		if (!in.is_open())
+			throw ("Error: file not exist");
+		std::getline(in, this->input, '\0');
+		if (this->input.empty())
+			throw ("Error: empty config file.");
+		//first take off comments #
+		this->take_off_comments();
+		//second change all whitespaces to ' ' space
+		//third trim the string
+		this->turn_whitespaces_to_space();
+	
+		//fourth start tokenizing
+		this->tokenizer();
+	
+		//fifth start lexer and grammer BNF
+		this->lexer();
+	
+		//maybe here use try and catch
+		//std::cout << this->input << std::endl;
+		//here print the tokenizer vector
+		//for (int i = 0; i < static_cast<int>(this->tokens.size()); i++)
+		//	std::cout << "|" << this->tokens[i].first << "|   |" << this->tokens[i].second << "|" << std::endl;
+	}
+	catch (const char *error)
+	{
+		std::cerr << error << std::endl;
+		exit(1);
+	}
 
 	//for (std::string input; std::getline(in, input, '\0'); )
 	//	this->input.push_back(input);

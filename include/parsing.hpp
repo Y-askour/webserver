@@ -6,6 +6,7 @@
 
 class	parsing
 {
+	//#define	directive "listen host root index mime_types server_name status_page allow_methods client_max_body_size autoindex return cgi upload";
 	typedef	enum tokens {
 		SERVER,
 		LOCATION,
@@ -20,9 +21,17 @@ class	parsing
 	std::string	input;
 	std::vector<std::pair<t_tokens, std::string> > tokens;
 
-	//iterator
+	//this one have directive to check
+	std::string	directive_id;
+	std::vector<std::pair<int, std::string> >	directive_name;
+
+	//iterator string input
 	std::string::iterator	start;
 	std::string::iterator	iter;
+
+	//iterator for vector tokens
+	std::vector<std::pair<t_tokens, std::string> >::iterator	begin;
+	std::vector<std::pair<t_tokens, std::string> >::iterator	end;
 
 
 	std::pair<t_tokens, std::string> hold;
@@ -38,8 +47,15 @@ class	parsing
 		void	braces_token(t_tokens type);
 		void	semicolon_token(void);
 		int		iskeyword(int c);
-		void	lexer();
-		//void	_token(void);
+		void	lexer(void);
+		void	check_server_syntax(void);
+		std::vector<std::pair<t_tokens, std::string> >::iterator	get_end_closing_braces(void);
+		void	check_location_syntax();
+		void	check_directive_syntax();
+		void	check_allowed_directive(int check);
+		int		find_directive(void);
+		//std::vector<std::pair<t_tokens, std::string> >::iterator	get_end_directive(void);
+		
 
 
 

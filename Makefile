@@ -3,7 +3,7 @@ CC = c++
 FLAG = -Wall -Wextra -Werror -std=c++98 -g
 HEADER = $(addprefix include/, parsing.hpp)
 
-SRCS =  $(addprefix srcs/, main.cpp parsing.cpp tokenizer.cpp)
+SRCS =  $(addprefix srcs/, main.cpp parsing.cpp tokenizer.cpp lexer.cpp)
 
 OBJS = $(SRCS:.cpp=.o)
 

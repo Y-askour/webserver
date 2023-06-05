@@ -16,20 +16,23 @@
 
 <CLOSE_BRACES> ::= }
 
+0 = server only
+1 = location only
+2 = both
 ALL_DIRECTIVES:
-    -listen.
-    -host.
-    -root.
-    -index.
-    -mime_types.
-    -server_name.
-    -status_page.
-    -allow_methods.
-    -client_max_body_size.
-    -autoindex.
-    -return.
-    -cgi.
-    -upload.
+0    -listen.
+0    -host.
+0    -mime_types.
+0    -server_name.
+0    -status_page.
+1    -return.
+2    -root.
+2    -index.
+2    -allow_methods.
+2    -client_max_body_size.
+2    -autoindex.
+2    -cgi_info.
+2    -upload.
 
 ALLOW_DIRECTIVE_IN_SERVER:
     -listen.
@@ -42,7 +45,7 @@ ALLOW_DIRECTIVE_IN_SERVER:
     -allow_methods.
     -client_max_body_size.
     -autoindex.
-    -cgi.
+    -cgi_info.
     -upload.
 
 ALLOW_DIRECTIVE_IN_LOCATION:
@@ -53,5 +56,5 @@ ALLOW_DIRECTIVE_IN_LOCATION:
     -client_max_body_size.
     -autoindex.
     -return.
-    -cgi.
+    -cgi_info.
     -upload.
