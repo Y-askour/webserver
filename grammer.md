@@ -75,3 +75,5 @@ DIRECTIVE SHOULD NOT BE REPEATED:
     -auto_index.
     -mime_types. one server also you need to check path and parse it.
     -allow_methods. one server and location.
+
+Check if location repeated for example location /l two time error

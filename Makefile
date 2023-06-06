@@ -1,9 +1,11 @@
 NAME = webserv
 CC = c++
 FLAG = -Wall -Wextra -Werror -std=c++98 -g
-HEADER = $(addprefix include/, parsing.hpp)
+HEADER = $(addprefix include/, Data.hpp Parsing.hpp Default_serv.hpp Server.hpp \
+				 Location.hpp)
 
-SRCS =  $(addprefix srcs/, main.cpp parsing.cpp tokenizer.cpp lexer.cpp)
+SRCS = $(addprefix srcs/, main.cpp Parsing.cpp tokenizer.cpp lexer.cpp \
+			 Data.cpp Server.cpp Default_serv.cpp)
 
 OBJS = $(SRCS:.cpp=.o)
 

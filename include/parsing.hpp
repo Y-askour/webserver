@@ -1,4 +1,5 @@
 #pragma once
+#include "../include/Server.hpp"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -7,35 +8,39 @@
 
 class	Parsing
 {
-	//#define	directive "listen host root index mime_types server_name status_page allow_methods client_max_body_size autoindex return cgi upload";
+	protected :
 	typedef	enum tokens {
 		SERVER,
 		LOCATION,
 		WORD,
-		//SPACE,
 		DIRECTIVE,
 		OPEN_BRACES,
 		CLOSE_BRACES,
 		SEMICOLON,
 	} t_tokens;
-	std::string	config_file;
-	std::string	input;
-	std::vector<std::pair<t_tokens, std::string> > tokens;
 
+	//config file name
+	std::string	config_file;
+	//here where i put the file
+	std::string	input;
+	//this one hold tokens of the file
+	std::vector<std::pair<t_tokens, std::string> > tokens;
 	//this one have directive to check
 	std::string	directive_id;
+	//this one holds all the directive to check if directive true
 	std::vector<std::pair<int, std::string> >	directive_name;
-
 	//iterator string input
 	std::string::iterator	start;
 	std::string::iterator	iter;
-
 	//iterator for vector tokens
 	std::vector<std::pair<t_tokens, std::string> >::iterator	begin;
 	std::vector<std::pair<t_tokens, std::string> >::iterator	end;
-
-
+	//holds tokens of tokenizer to push in token
 	std::pair<t_tokens, std::string> hold;
+
+	//this vector hold all Servers and their location and i will init it to serves in data
+	std::vector<Server> server;
+
 	public :
 	//here i should add copy constructer and shiit
 		Parsing(void);
@@ -56,20 +61,11 @@ class	Parsing
 		void	check_directive_syntax();
 		void	check_allowed_directive(int check);
 		int		find_directive(void);
-		//std::vector<std::pair<t_tokens, std::string> >::iterator	get_end_directive(void);
-		
-
-
-
-		void	turn_separator_to_space(void);
-		void	split(char sp);
-		std::string	skip_spaces(int index, char sp);
-		//void	ll(std::ifstream &in);
 		void	strtrim(void);
+		void	turn_separator_to_space(void);
+
+		//function to hold data in the server
+		void	save_data_in_the_server(void);
+		void	parse_server(void);
 		~Parsing(void);
-//method function
-//function of parsing that contain all the function down blow
-//function that reads the file
-//function that splits the elment of the file and put it in a vector
-//
 };

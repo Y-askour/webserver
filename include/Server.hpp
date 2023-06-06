@@ -1,9 +1,12 @@
 #pragma once
 
-#include <iostream>
+#include "Default_serv.hpp"
+#include "Location.hpp"
 
-class Server
+class Server : public Default_serv
 {
+	//here location
+	std::map<std::string, Location> locations;
 	public :
 		Server();
 		~Server();
