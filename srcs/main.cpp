@@ -1,4 +1,4 @@
-#include "../include/parsing.hpp"
+#include "../include/Parsing.hpp"
 
 int	main(int ac, char **av)
 {
@@ -7,7 +7,7 @@ int	main(int ac, char **av)
 		std::cerr << "Error: wrong argument" << std::endl;
 		return (1);
 	}
-	parsing	data(av[1]);
+	Parsing	data(av[1]);
 	data.parse_file();
 	return (0);
 }

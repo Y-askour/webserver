@@ -1,6 +1,6 @@
-#include "../include/parsing.hpp"
+#include "../include/Parsing.hpp"
 
-parsing::parsing(std::string file) : config_file(file)
+Parsing::Parsing(std::string file) : config_file(file)
 {
 	std::pair<int, std::string> data;
 	std::string	directives = "listen host mime_types server_name status_page return root index allow_methods client_max_body_size autoindex cgi_info upload ";
@@ -24,7 +24,7 @@ parsing::parsing(std::string file) : config_file(file)
 	//constructer
 }
 
-//void	parsing::turn_separator_to_space(void)
+//void	Parsing::turn_separator_to_space(void)
 //{
 //	for (int i = 0; i < static_cast<int>(this->input.size()); i++)
 //	{
@@ -39,7 +39,7 @@ parsing::parsing(std::string file) : config_file(file)
 //	}
 //}
 
-//std::string	parsing::skip_spaces(int index, char sp)
+//std::string	Parsing::skip_spaces(int index, char sp)
 //{
 //	std::string hold;
 //
@@ -62,7 +62,7 @@ parsing::parsing(std::string file) : config_file(file)
 //	return (hold);
 //}
 
-//void	parsing::split(char sp)
+//void	Parsing::split(char sp)
 //{
 //	std::vector<std::string>	expressions;
 //	std::string	hold;
@@ -120,7 +120,7 @@ parsing::parsing(std::string file) : config_file(file)
 //	this->input = expressions;
 //}
 
-//void	parsing::trim_string(void)
+//void	Parsing::trim_string(void)
 //{
 //	int	start;
 //	int	end;
@@ -138,7 +138,7 @@ parsing::parsing(std::string file) : config_file(file)
 //	}
 //}
 
-void	parsing::take_off_comments(void)
+void	Parsing::take_off_comments(void)
 {
 	size_t	found;
 
@@ -175,7 +175,7 @@ void	parsing::take_off_comments(void)
 	//}
 }
 
-void	parsing::strtrim(void)
+void	Parsing::strtrim(void)
 {
 	int	start, end;
 	for (start = 0; isspace(this->input.c_str()[start]); start++)
@@ -186,7 +186,7 @@ void	parsing::strtrim(void)
 	this->input = this->input.substr(start, (end + 1) - start);
 }
 
-void	parsing::turn_whitespaces_to_space(void)
+void	Parsing::turn_whitespaces_to_space(void)
 {
 	//for (size_t	found; \
 	//	(found = this->input.find("\n\r\t\v\f")) <= static_cast<size_t>(this->input.length());)
@@ -203,7 +203,7 @@ void	parsing::turn_whitespaces_to_space(void)
 	}
 }
 
-void	parsing::parse_file(void)
+void	Parsing::parse_file(void)
 {
 	try
 	{
@@ -249,7 +249,7 @@ void	parsing::parse_file(void)
 	//std::cout << std::endl;
 }
 
-parsing::~parsing(void)
+Parsing::~Parsing(void)
 {
 	//destructer
 }

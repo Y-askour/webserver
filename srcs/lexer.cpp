@@ -1,9 +1,9 @@
-#include "../include/parsing.hpp"
+#include "../include/Parsing.hpp"
 
-std::vector<std::pair<parsing::t_tokens, std::string> >::iterator	parsing::get_end_closing_braces(void)
+std::vector<std::pair<Parsing::t_tokens, std::string> >::iterator	Parsing::get_end_closing_braces(void)
 {
 	int	check;
-	std::vector<std::pair<parsing::t_tokens, std::string> >::iterator	iter;
+	std::vector<std::pair<Parsing::t_tokens, std::string> >::iterator	iter;
 
 	for (iter = this->begin, check = 1; check && iter != this->tokens.end(); iter++)
 	{
@@ -17,7 +17,7 @@ std::vector<std::pair<parsing::t_tokens, std::string> >::iterator	parsing::get_e
 	return (iter - 1);
 }
 
-int	parsing::find_directive(void)
+int	Parsing::find_directive(void)
 {
 	for (int	i = 0; i < static_cast<int>(this->directive_name.size()); i++)
 	{
@@ -27,14 +27,11 @@ int	parsing::find_directive(void)
 	return (-1);
 }
 
-void	parsing::check_allowed_directive(int check)
+void	Parsing::check_allowed_directive(int check)
 {
 	int	find = this->find_directive();
 	if (find < 0)
-	{
-		//std::cout << this->directive_id << std::endl;
 		throw ("Error: use of unexisting directive.");
-	}
 	if (!check)
 	{
 		if (find == 1)
@@ -47,7 +44,7 @@ void	parsing::check_allowed_directive(int check)
 	}
 }
 
-void	parsing::check_directive_syntax(void)
+void	Parsing::check_directive_syntax(void)
 {
 	int	count;
 
@@ -61,9 +58,9 @@ void	parsing::check_directive_syntax(void)
 		throw ("Error: wrong syntax of directive, usage directive word;.");
 }
 
-void	parsing::check_location_syntax(void)
+void	Parsing::check_location_syntax(void)
 {
-	std::vector<std::pair<parsing::t_tokens, std::string> >::iterator	iter;
+	std::vector<std::pair<Parsing::t_tokens, std::string> >::iterator	iter;
 
 	if ((this->begin + 2) == this->tokens.end())
 		throw ("Error: wrong syntax of location, usage location path {...}.");
@@ -84,7 +81,7 @@ void	parsing::check_location_syntax(void)
 	}
 }
 
-void	parsing::check_server_syntax(void)
+void	Parsing::check_server_syntax(void)
 {
 	if ((++this->begin) == this->tokens.end() || (this->begin++)->first != OPEN_BRACES)
 		throw ("Error: wrong syntax of the server.");
@@ -104,7 +101,7 @@ void	parsing::check_server_syntax(void)
 	}
 }
 
-void	parsing::lexer(void)
+void	Parsing::lexer(void)
 {
 	for (this->begin = this->tokens.begin(); this->begin != this->tokens.end(); )
 	{

@@ -58,3 +58,20 @@ ALLOW_DIRECTIVE_IN_LOCATION:
     -return.
     -cgi_info.
     -upload.
+
+REPEATED DIRECTIVE:
+    -listen. but with different port if port repeated error.
+    -index.
+    -server_name.
+    -status_page. also check if path exists and status code range.
+    -return. also check path and status code.
+    -cgi_info. check if .php or .py repeated error
+
+DIRECTIVE SHOULD NOT BE REPEATED:
+    -host. and check if it valid.
+    -root. one in server and location one.
+    -client_max_body_size.
+    -upload.
+    -auto_index.
+    -mime_types. one server also you need to check path and parse it.
+    -allow_methods. one server and location.

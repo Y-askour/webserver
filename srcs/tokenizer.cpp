@@ -1,11 +1,11 @@
-#include "../include/parsing.hpp"
+#include "../include/Parsing.hpp"
 //function tokens i need
 //first keyword and then when i hold the string i will check if it's "server" or "location"
 //space just put the token no string
 //one function process open and close braces if we have '{{{' every single one in a token
 //a function of semicolon if there's ';;;' it hold them all in one index
 
-int	parsing::iskeyword(int c)
+int	Parsing::iskeyword(int c)
 {
 	//if (c == ' ' || c == '{' || c == '}' || c == ';')
 	if (c == ' ' || c == '{' || c == '}' || c == ';' || c == 0)
@@ -13,7 +13,7 @@ int	parsing::iskeyword(int c)
 	return (1);
 }
 
-void	parsing::keyword_token(int chk)
+void	Parsing::keyword_token(int chk)
 {
 	while (this->iskeyword(*this->iter))
 		this->iter++;
@@ -30,7 +30,7 @@ void	parsing::keyword_token(int chk)
 	//this->input.erase(this->start - this->input.begin(), this->iter - this->input.begin());
 }
 
-void	parsing::space_token(void)
+void	Parsing::space_token(void)
 {
 	while (*this->iter && *this->iter == ' ')
 		this->iter++;
@@ -42,7 +42,7 @@ void	parsing::space_token(void)
 	this->start = this->iter;
 }
 
-void	parsing::braces_token(t_tokens type)
+void	Parsing::braces_token(t_tokens type)
 {
 	this->iter++;
 	this->hold.first = type;
@@ -57,7 +57,7 @@ void	parsing::braces_token(t_tokens type)
 	this->start = this->iter;
 }
 
-void	parsing::semicolon_token(void)
+void	Parsing::semicolon_token(void)
 {
 	this->iter++;
 	this->hold.first = SEMICOLON;
@@ -68,7 +68,7 @@ void	parsing::semicolon_token(void)
 	this->start = this->iter;
 }
 
-void	parsing::tokenizer(void)
+void	Parsing::tokenizer(void)
 {
 	//i will not include spaces
 	//also the semicolon and braces take off the second string make it clear

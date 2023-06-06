@@ -3,8 +3,9 @@
 #include <fstream>
 #include <algorithm>
 #include <vector>
+#include <map>
 
-class	parsing
+class	Parsing
 {
 	//#define	directive "listen host root index mime_types server_name status_page allow_methods client_max_body_size autoindex return cgi upload";
 	typedef	enum tokens {
@@ -37,7 +38,8 @@ class	parsing
 	std::pair<t_tokens, std::string> hold;
 	public :
 	//here i should add copy constructer and shiit
-		parsing(std::string file);
+		Parsing(void);
+		Parsing(std::string file);
 		void	turn_whitespaces_to_space(void);
 		void	take_off_comments(void);
 		void	parse_file(void);
@@ -64,7 +66,7 @@ class	parsing
 		std::string	skip_spaces(int index, char sp);
 		//void	ll(std::ifstream &in);
 		void	strtrim(void);
-		~parsing(void);
+		~Parsing(void);
 //method function
 //function of parsing that contain all the function down blow
 //function that reads the file
