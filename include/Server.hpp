@@ -6,7 +6,7 @@
 class Server : public Default_serv
 {
 	//here location
-	std::map<std::string, Location> locations;
+	//std::map<std::string, Location> locations;
 	public :
 		Server();
 		~Server();

@@ -13,6 +13,8 @@ class Data : public Parsing
 	public :
 		Data();
 		Data(std::string name);
+		std::vector<std::pair<t_tokens, std::string> >::iterator	get_end_closing_braces(void);
+		//std::vector<std::pair<t_tokens, std::string> >::iterator	get_end_closing_braces(void);
 		void	parse_file_and_syntax_error(void);
 		~Data();
 };

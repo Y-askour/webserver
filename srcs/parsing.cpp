@@ -2,13 +2,13 @@
 
 Parsing::Parsing(void)
 {
-	std::cout << "Parsing Default constructer" << std::endl;
+	//std::cout << "Parsing Default constructer" << std::endl;
 }
 
 Parsing::Parsing(std::string file) : config_file(file)
 {
 	std::cout << "Parsing string constructer" << std::endl;
-	std::pair<int, std::string> data;
+	std::pair<int[3], std::string> data;
 	std::string	directives = "listen host mime_types server_name status_page return root index allow_methods client_max_body_size autoindex cgi_info upload ";
 
 	for (int	i = 0, key = 0; !directives.empty(); i++)
@@ -17,7 +17,9 @@ Parsing::Parsing(std::string file) : config_file(file)
 			key = 1;
 		else if (i > 5)
 			key = 2;
-		data.first = key;
+		data.first[0] = key;
+		data.first[1] = 0;
+		data.first[2] = 0;
 		data.second = directives.substr(0, directives.find(' '));
 		directives.erase(0, directives.find(' ') + 1);
 		this->directive_name.push_back(data);
@@ -89,6 +91,6 @@ void	Parsing::parse_file(void)
 
 Parsing::~Parsing(void)
 {
-	std::cout << "Parsing Default destructer" << std::endl;
+	//std::cout << "Parsing Default destructer" << std::endl;
 	//destructer
 }

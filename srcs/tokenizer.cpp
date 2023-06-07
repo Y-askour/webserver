@@ -34,6 +34,7 @@ void	Parsing::braces_token(t_tokens type)
 {
 	this->iter++;
 	this->hold.first = type;
+	this->hold.second.clear();
 	this->tokens.push_back(this->hold);
 	this->start = this->iter;
 }
@@ -42,6 +43,7 @@ void	Parsing::semicolon_token(void)
 {
 	this->iter++;
 	this->hold.first = SEMICOLON;
+	this->hold.second.clear();
 	this->tokens.push_back(this->hold);
 	this->start = this->iter;
 }

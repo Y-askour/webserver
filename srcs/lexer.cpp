@@ -1,9 +1,9 @@
 #include "../include/Parsing.hpp"
 
-std::vector<std::pair<Parsing::t_tokens, std::string> >::iterator	Parsing::get_end_closing_braces(void)
+std::vector<std::pair<t_tokens, std::string> >::iterator	Parsing::get_end_closing_braces(void)
 {
 	int	check;
-	std::vector<std::pair<Parsing::t_tokens, std::string> >::iterator	iter;
+	std::vector<std::pair<t_tokens, std::string> >::iterator	iter;
 
 	for (iter = this->begin, check = 1; check && iter != this->tokens.end(); iter++)
 	{
@@ -17,31 +17,86 @@ std::vector<std::pair<Parsing::t_tokens, std::string> >::iterator	Parsing::get_e
 	return (iter - 1);
 }
 
-int	Parsing::find_directive(void)
+std::vector<std::pair<int[3], std::string> >::iterator	Parsing::find_directive(void)
 {
-	for (int	i = 0; i < static_cast<int>(this->directive_name.size()); i++)
+	std::vector<std::pair<int[3], std::string> >::iterator	itr;
+
+	for (itr = this->directive_name.begin(); itr != this->directive_name.end(); itr++)
 	{
-		if (!this->directive_name[i].second.compare(this->directive_id))
-			return (this->directive_name[i].first);
+		if (!itr->second.compare(this->directive_itr->second))
+			return (itr);
 	}
-	return (-1);
+	return (this->directive_name.end());
+	//for (int	i = 0; i < static_cast<int>(this->directive_name.size()); i++)
+	//{
+	//	if (!this->directive_name[i].second[1].compare(this->directive_itr->second))
+	//		return (this->directive_name[i].first);
+	//}
+	//return (-1);
 }
 
-void	Parsing::check_allowed_directive(int check)
+void	Parsing::check_allowed_directive_and_repetitive(int check)
 {
-	int	find = this->find_directive();
-	if (find < 0)
+	std::vector<std::pair<int[3], std::string> >::iterator	iter;
+
+	//int	find = this->find_directive();
+	iter = this->find_directive();
+	if (iter == this->directive_name.end())
 		throw ("Error: use of unexisting directive.");
+	//server
 	if (!check)
 	{
-		if (find == 1)
+		if (iter->first[0] == 1)
 			throw ("Error: misplaced directive place only use in location.");
+		//iter->first[1]++;
+		if ((!iter->second.compare("host") || !iter->second.compare("root") \
+				|| !iter->second.compare("upload") || !iter->second.compare("auto_index") \
+				|| !iter->second.compare("mime_types") || !iter->second.compare("allow_methods") \
+				|| !iter->second.compare("client_max_body_size")))
+		{
+			iter->first[1]++;
+			//std::cout << iter->second << std::endl;
+			if (iter->first[1] > 1)
+				throw ("Error: wrong syntax repeated directive in server.");
+		}
 	}
+	//location
 	else
 	{
-		if (find == 0)
+		if (iter->first[0] == 0)
 			throw ("Error: misplaced directive place only use in server.");
+		//iter->first[2]++;
+		if ((!iter->second.compare("host") || !iter->second.compare("root") \
+				|| !iter->second.compare("upload") || !iter->second.compare("auto_index") \
+				|| !iter->second.compare("mime_types") || !iter->second.compare("allow_methods") \
+				|| !iter->second.compare("client_max_body_size")))
+		{
+			iter->first[2]++;
+			if (iter->first[2] > 1)
+				throw ("Error: wrong syntax repeated directive in location.");
+		}
 	}
+//DIRECTIVE SHOULD NOT BE REPEATED:
+//    -host. and check if it valid.
+//    -root. one in server and location one.
+//    -client_max_body_size.
+//    -upload.
+//    -auto_index.
+//    -mime_types. one server also you need to check path and parse it.
+//    -allow_methods. one server and location.
+
+	//if (find < 0)
+	//	throw ("Error: use of unexisting directive.");
+	//if (!check)
+	//{
+	//	if (find == 1)
+	//		throw ("Error: misplaced directive place only use in location.");
+	//}
+	//else
+	//{
+	//	if (find == 0)
+	//		throw ("Error: misplaced directive place only use in server.");
+	//}
 }
 
 void	Parsing::check_directive_syntax(void)
@@ -58,23 +113,56 @@ void	Parsing::check_directive_syntax(void)
 		throw ("Error: wrong syntax of directive, usage directive word;.");
 }
 
+void	Parsing::check_directive_value_length()
+{
+	int	count;
+	std::vector<std::pair<t_tokens, std::string> >::iterator	iter;
+	for (iter = this->directive_itr, count = 0; iter->first != SEMICOLON; iter++)
+	{
+		if (iter->first == WORD)
+			count++;
+	}
+//*0    -listen.
+//*0    -host.
+//*0    -mime_types.
+//0    -server_name.
+//#0    -status_page.
+//#1    -return.
+//*2    -root.
+//2    -index.
+//2    -allow_methods.
+//*2    -client_max_body_size.
+//*2    -autoindex.
+//#2    -cgi_info.
+//*2    -upload.
+	if ((!this->directive_itr->second.compare("listen") || !this->directive_itr->second.compare("host") \
+			|| !this->directive_itr->second.compare("mime_types") || !this->directive_itr->second.compare("root") \
+			|| !this->directive_itr->second.compare("autoindex") || !this->directive_itr->second.compare("upload") \
+			|| !this->directive_itr->second.compare("client_max_body_size")) && (count != 1))
+		throw ("Error: wrong syntax directive take one parameter.");
+	if ((!this->directive_itr->second.compare("status_page") || !this->directive_itr->second.compare("return") \
+				|| !this->directive_itr->second.compare("cgi_info")) && (count != 2))
+		throw ("Error: wrong syntax directive take two parameter.");
+}
+
 void	Parsing::check_location_syntax(void)
 {
-	std::vector<std::pair<Parsing::t_tokens, std::string> >::iterator	iter;
+	std::vector<std::pair<t_tokens, std::string> >::iterator	iter;
 
 	if ((this->begin + 2) == this->tokens.end())
 		throw ("Error: wrong syntax of location, usage location path {...}.");
 	if ((++this->begin)->first != WORD || (++this->begin)->first != OPEN_BRACES)
 		throw ("Error: wrong syntax of location, usage location path {...}.");
 	this->begin++;
-	iter = this->get_end_closing_braces();
+	iter = this->Parsing::get_end_closing_braces();
 	for (; this->begin != iter; this->begin++)
 	{
 		if (this->begin->first == DIRECTIVE)
 		{
-			this->directive_id = this->begin->second;
+			this->directive_itr = this->begin;
 			this->check_directive_syntax();
-			this->check_allowed_directive(1);
+			this->check_allowed_directive_and_repetitive(1);
+			this->check_directive_value_length();
 		}
 		else
 			throw ("Error: wrong syntax.");
@@ -85,14 +173,15 @@ void	Parsing::check_server_syntax(void)
 {
 	if ((++this->begin) == this->tokens.end() || (this->begin++)->first != OPEN_BRACES)
 		throw ("Error: wrong syntax of the server.");
-	this->end = this->get_end_closing_braces();
+	this->end = this->Parsing::get_end_closing_braces();
 	for (; this->begin != this->end; this->begin++)
 	{
 		if (this->begin->first == DIRECTIVE)
 		{
-			this->directive_id = this->begin->second;
+			this->directive_itr = this->begin;
 			this->check_directive_syntax();
-			this->check_allowed_directive(0);
+			this->check_allowed_directive_and_repetitive(0);
+			this->check_directive_value_length();
 		}
 		else if (this->begin->first == LOCATION)
 			this->check_location_syntax();
@@ -108,6 +197,11 @@ void	Parsing::lexer(void)
 		if (this->begin->first == SERVER)
 		{
 			this->check_server_syntax();
+			for (int i = 0; i < static_cast<int>(this->directive_name.size()); i++)
+			{
+				this->directive_name[i].first[1] = 0;
+				this->directive_name[i].first[2] = 0;
+			}
 			this->begin = this->end + 1;
 		}
 		else

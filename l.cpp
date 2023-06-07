@@ -1,24 +1,32 @@
 #include <iostream>
 
-class a
+class b
 {
+	std::string	a;
 	public :
-		static	int	d;
-		a(void) {
-			//d = 10;
-		}
-		~a(void) {}
+		void	ok() { std::cout << "ok of b" << std::endl;}
+		b(){ std::cout << "constructer b" << std::endl;}
+		~b(){ std::cout << "destructer b" << std::endl;}
 };
 
-int	a::d = 10;
+class a : public b
+{
+	std::string	g;
+	public :
+		void	ok() { std::cout << "ok of a" << std::endl;}
+		void	l() {std::cout << "l" << std::endl;}
+		a(){ std::cout << "constructer a" << std::endl;}
+		~a(){ std::cout << "destructer a" << std::endl;}
+};
 
 int	main()
 {
-	a b;
-	a g;
-	std::cout << b.d << std::endl;
-	b.d = 33;
-	std::cout << b.d << std::endl;
-	std::cout << g.d << std::endl;
-	
+	b *d = new a();
+
+	d->ok();
+	d->l();
+	//a d;
+	//b g;
+	//g.ok();
+	//d.b::ok();
 }

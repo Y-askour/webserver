@@ -28,4 +28,72 @@ Default_serv::Default_serv(void)
 //this one for location
 Default_serv::Default_serv(int) {}
 
+void	Default_serv::add_listen(std::vector<std::string> data)
+{
+	this->listen.push_back(80);
+	return ;
+	for (int	i = 0; i < static_cast<int>(data.size()); i++)
+		this->listen.push_back(atoi(data[i].c_str()));
+}
+
+void	Default_serv::add_index(std::vector<std::string> data)
+{
+	(void)data;
+}
+
+void	Default_serv::add_server_name(std::vector<std::string> data)
+{
+	(void)data;
+}
+
+void	Default_serv::add_status_page(std::vector<std::string> data)
+{
+	(void)data;
+}
+
+void	Default_serv::add_cgi_info(std::vector<std::string> data)
+{
+	(void)data;
+}
+
+void	Default_serv::add_host(std::vector<std::string> data)
+{
+	(void)data;
+}
+
+void	Default_serv::add_root(std::vector<std::string> data)
+{
+	(void)data;
+}
+
+void	Default_serv::add_client_max_body_size(std::vector<std::string> data)
+{
+	(void)data;
+}
+
+void	Default_serv::add_upload(std::vector<std::string> data)
+{
+	(void)data;
+}
+
+void	Default_serv::add_auto_index(std::vector<std::string> data)
+{
+	(void)data;
+}
+
+void	Default_serv::add_mime_types(std::vector<std::string> data)
+{
+	(void)data;
+}
+
+void	Default_serv::add_allow_methods(std::vector<std::string> data)
+{
+	(void)data;
+}
+
+void	Default_serv::add_return(std::vector<std::string> data)
+{
+	(void)data;
+}
+
 Default_serv::~Default_serv(void) {}
