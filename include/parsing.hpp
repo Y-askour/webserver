@@ -1,5 +1,5 @@
 #pragma once
-#include "../include/Server.hpp"
+#include "Server.hpp"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -68,7 +68,7 @@ class	Parsing
 		int		iskeyword(int c);
 		void	lexer(void);
 		void	check_server_syntax(void);
-		virtual std::vector<std::pair<t_tokens, std::string> >::iterator	get_end_closing_braces(void);
+		std::vector<std::pair<t_tokens, std::string> >::iterator	get_end_closing_braces(void);
 		void	check_location_syntax();
 		void	check_directive_syntax();
 		void	check_allowed_directive_and_repetitive(int check);
@@ -81,7 +81,10 @@ class	Parsing
 		//function to hold data in the server
 		void	save_data_in_the_server(void);
 		void	parse_server(void);
-		void	parse_directive(void);
-		void	check_wish_directive(std::vector<std::string> data);
-		virtual ~Parsing(void);
+		void	parse_location(void);
+		void	parse_directive(int check);
+		void	check_wish_directive(int check, std::vector<std::string> data);
+		//here parse mime_types
+		void	parse_mime_types(void);
+		~Parsing(void);
 };

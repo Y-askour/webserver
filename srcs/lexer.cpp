@@ -27,19 +27,12 @@ std::vector<std::pair<int[3], std::string> >::iterator	Parsing::find_directive(v
 			return (itr);
 	}
 	return (this->directive_name.end());
-	//for (int	i = 0; i < static_cast<int>(this->directive_name.size()); i++)
-	//{
-	//	if (!this->directive_name[i].second[1].compare(this->directive_itr->second))
-	//		return (this->directive_name[i].first);
-	//}
-	//return (-1);
 }
 
 void	Parsing::check_allowed_directive_and_repetitive(int check)
 {
 	std::vector<std::pair<int[3], std::string> >::iterator	iter;
 
-	//int	find = this->find_directive();
 	iter = this->find_directive();
 	if (iter == this->directive_name.end())
 		throw ("Error: use of unexisting directive.");
@@ -50,7 +43,7 @@ void	Parsing::check_allowed_directive_and_repetitive(int check)
 			throw ("Error: misplaced directive place only use in location.");
 		//iter->first[1]++;
 		if ((!iter->second.compare("host") || !iter->second.compare("root") \
-				|| !iter->second.compare("upload") || !iter->second.compare("auto_index") \
+				|| !iter->second.compare("upload") || !iter->second.compare("autoindex") \
 				|| !iter->second.compare("mime_types") || !iter->second.compare("allow_methods") \
 				|| !iter->second.compare("client_max_body_size")))
 		{
@@ -67,7 +60,7 @@ void	Parsing::check_allowed_directive_and_repetitive(int check)
 			throw ("Error: misplaced directive place only use in server.");
 		//iter->first[2]++;
 		if ((!iter->second.compare("host") || !iter->second.compare("root") \
-				|| !iter->second.compare("upload") || !iter->second.compare("auto_index") \
+				|| !iter->second.compare("upload") || !iter->second.compare("autoindex") \
 				|| !iter->second.compare("mime_types") || !iter->second.compare("allow_methods") \
 				|| !iter->second.compare("client_max_body_size")))
 		{
@@ -76,27 +69,6 @@ void	Parsing::check_allowed_directive_and_repetitive(int check)
 				throw ("Error: wrong syntax repeated directive in location.");
 		}
 	}
-//DIRECTIVE SHOULD NOT BE REPEATED:
-//    -host. and check if it valid.
-//    -root. one in server and location one.
-//    -client_max_body_size.
-//    -upload.
-//    -auto_index.
-//    -mime_types. one server also you need to check path and parse it.
-//    -allow_methods. one server and location.
-
-	//if (find < 0)
-	//	throw ("Error: use of unexisting directive.");
-	//if (!check)
-	//{
-	//	if (find == 1)
-	//		throw ("Error: misplaced directive place only use in location.");
-	//}
-	//else
-	//{
-	//	if (find == 0)
-	//		throw ("Error: misplaced directive place only use in server.");
-	//}
 }
 
 void	Parsing::check_directive_syntax(void)
@@ -122,19 +94,6 @@ void	Parsing::check_directive_value_length()
 		if (iter->first == WORD)
 			count++;
 	}
-//*0    -listen.
-//*0    -host.
-//*0    -mime_types.
-//0    -server_name.
-//#0    -status_page.
-//#1    -return.
-//*2    -root.
-//2    -index.
-//2    -allow_methods.
-//*2    -client_max_body_size.
-//*2    -autoindex.
-//#2    -cgi_info.
-//*2    -upload.
 	if ((!this->directive_itr->second.compare("listen") || !this->directive_itr->second.compare("host") \
 			|| !this->directive_itr->second.compare("mime_types") || !this->directive_itr->second.compare("root") \
 			|| !this->directive_itr->second.compare("autoindex") || !this->directive_itr->second.compare("upload") \

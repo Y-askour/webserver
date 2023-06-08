@@ -2,6 +2,7 @@
 
 //#include "Parsing.hpp"
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <map>
 
@@ -19,7 +20,7 @@ class Default_serv
 	std::string root;
 	std::string	client_max_body_size;
 	int	upload;
-	int	auto_index;
+	int	autoindex;
 	//std::string	mime_types_name;
 	std::string mime_types;
 	std::vector<std::pair<std::string, std::string> > mime_types_parse;
@@ -42,13 +43,19 @@ class Default_serv
 		void	add_root(std::vector<std::string> data);
 		void	add_client_max_body_size(std::vector<std::string> data);
 		void	add_upload(std::vector<std::string> data);
-		void	add_auto_index(std::vector<std::string> data);
+		void	add_autoindex(std::vector<std::string> data);
 		void	add_mime_types(std::vector<std::string> data);
 		void	add_allow_methods(std::vector<std::string> data);
 		void	add_return(std::vector<std::string> data);
 
 
+		//parsing it
 
+		//getters
+		std::string get_mime_types(void)
+		{
+			return (this->mime_types);
+		}
 
 
 		//here maybe i will make a function with a string parameter for example "listen"

@@ -25,3 +25,10 @@ Grammer BNF:
 TODO in parsing:
 -just skip all comments
 -add flag -t
+
+-----------
+-Now i need to parse the data of server and mime tyes.
+-Location will take all the behavior of the server and then start overriden the data in location i wll make a copy constructer.
+-Now i have to fix if the server have data it will delete the obj data and overide it.
+-Maybe Default_serv will inherit from parssing so i can parse the server data
+-Also check the path of Location if they are repeated and also for the other element of the server

@@ -15,24 +15,24 @@ Data::Data(std::string name) : Parsing(name)
 void	Data::parse_file_and_syntax_error(void)
 {
 	this->parse_file();
-	//this->servers = this->server;
+	this->servers = this->server;
+
 }
 
 std::vector<std::pair<t_tokens, std::string> >::iterator	Data::get_end_closing_braces(void)
 {
-	//int	check;
+	int	check;
 	std::vector<std::pair<t_tokens, std::string> >::iterator	iter;
 
-	for (iter = this->begin; iter != this->tokens.end(); iter++)
+	for (; this->begin->first != OPEN_BRACES && this->begin != this->tokens.end(); this->begin++)
 		;
-	//{
-	//	if (iter->first == OPEN_BRACES)
-	//		check++;
-	//	else if (iter->first == CLOSE_BRACES)
-	//		check--;
-	//}
-	//if (check)
-	//	throw ("Error: missing close braces of the server.");
+	for (this->begin++, iter = this->begin, check = 1; check && iter != this->tokens.end(); iter++)
+	{
+		if (iter->first == OPEN_BRACES)
+			check++;
+		else if (iter->first == CLOSE_BRACES)
+			check--;
+	}
 	return (iter - 1);
 }
 

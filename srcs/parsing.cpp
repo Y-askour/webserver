@@ -81,6 +81,7 @@ void	Parsing::parse_file(void)
 		this->tokenizer();
 		this->lexer();
 		this->save_data_in_the_server();
+		//this->parse_mime_types();
 	}
 	catch (const char *error)
 	{
