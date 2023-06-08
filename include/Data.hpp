@@ -1,19 +1,24 @@
 #pragma once
 
-#include "Server.hpp"
-#include "Parsing.hpp"
+#include "../include/Server.hpp"
 #include <iostream>
+#include <fstream>
+#include <cstdlib>
+#include <algorithm>
 #include <vector>
+#include <map>
 
-class Data : public Parsing
+class Data
 {
-	//std::string file;
+	protected :
+	//std::vector<std::pair<std::string, std::string> > mime_types_parse;
+	std::map<std::string, std::string>	mime_types_parse;
 	std::vector<Server> servers;
-	//Parsing	parse;
 	public :
 		Data();
 		Data(std::string name);
-		std::vector<std::pair<t_tokens, std::string> >::iterator	get_end_closing_braces(void);
+		//std::vector<std::pair<t_tokens, std::string> >::iterator	get_end_closing_braces(void);
+
 		//std::vector<std::pair<t_tokens, std::string> >::iterator	get_end_closing_braces(void);
 		void	parse_file_and_syntax_error(void);
 		~Data();

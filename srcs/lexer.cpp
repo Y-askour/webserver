@@ -1,6 +1,6 @@
 #include "../include/Parsing.hpp"
 
-std::vector<std::pair<t_tokens, std::string> >::iterator	Parsing::get_end_closing_braces(void)
+std::vector<std::pair<Parsing::t_tokens, std::string> >::iterator	Parsing::get_end_closing_braces(void)
 {
 	int	check;
 	std::vector<std::pair<t_tokens, std::string> >::iterator	iter;
@@ -44,8 +44,7 @@ void	Parsing::check_allowed_directive_and_repetitive(int check)
 		//iter->first[1]++;
 		if ((!iter->second.compare("host") || !iter->second.compare("root") \
 				|| !iter->second.compare("upload") || !iter->second.compare("autoindex") \
-				|| !iter->second.compare("mime_types") || !iter->second.compare("allow_methods") \
-				|| !iter->second.compare("client_max_body_size")))
+				|| !iter->second.compare("allow_methods") || !iter->second.compare("client_max_body_size")))
 		{
 			iter->first[1]++;
 			//std::cout << iter->second << std::endl;
@@ -61,8 +60,7 @@ void	Parsing::check_allowed_directive_and_repetitive(int check)
 		//iter->first[2]++;
 		if ((!iter->second.compare("host") || !iter->second.compare("root") \
 				|| !iter->second.compare("upload") || !iter->second.compare("autoindex") \
-				|| !iter->second.compare("mime_types") || !iter->second.compare("allow_methods") \
-				|| !iter->second.compare("client_max_body_size")))
+				|| !iter->second.compare("allow_methods") || !iter->second.compare("client_max_body_size")))
 		{
 			iter->first[2]++;
 			if (iter->first[2] > 1)
@@ -95,8 +93,8 @@ void	Parsing::check_directive_value_length()
 			count++;
 	}
 	if ((!this->directive_itr->second.compare("listen") || !this->directive_itr->second.compare("host") \
-			|| !this->directive_itr->second.compare("mime_types") || !this->directive_itr->second.compare("root") \
-			|| !this->directive_itr->second.compare("autoindex") || !this->directive_itr->second.compare("upload") \
+			|| !this->directive_itr->second.compare("root") || !this->directive_itr->second.compare("autoindex") \
+			|| !this->directive_itr->second.compare("upload") \
 			|| !this->directive_itr->second.compare("client_max_body_size")) && (count != 1))
 		throw ("Error: wrong syntax directive take one parameter.");
 	if ((!this->directive_itr->second.compare("status_page") || !this->directive_itr->second.compare("return") \

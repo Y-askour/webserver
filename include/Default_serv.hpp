@@ -22,8 +22,8 @@ class Default_serv
 	int	upload;
 	int	autoindex;
 	//std::string	mime_types_name;
-	std::string mime_types;
-	std::vector<std::pair<std::string, std::string> > mime_types_parse;
+	//std::string mime_types;
+	//std::vector<std::pair<std::string, std::string> > mime_types_parse;
 	//std::pair<std::string, std::vector<std::string, std::vector<std::string> > >	mime_types;
 	std::vector<std::string>	allow_methods;
 
@@ -44,7 +44,7 @@ class Default_serv
 		void	add_client_max_body_size(std::vector<std::string> data);
 		void	add_upload(std::vector<std::string> data);
 		void	add_autoindex(std::vector<std::string> data);
-		void	add_mime_types(std::vector<std::string> data);
+		//void	add_mime_types(std::vector<std::string> data);
 		void	add_allow_methods(std::vector<std::string> data);
 		void	add_return(std::vector<std::string> data);
 
@@ -52,10 +52,10 @@ class Default_serv
 		//parsing it
 
 		//getters
-		std::string get_mime_types(void)
-		{
-			return (this->mime_types);
-		}
+		//std::string get_mime_types(void)
+		//{
+		//	return (this->mime_types);
+		//}
 
 
 		//here maybe i will make a function with a string parameter for example "listen"

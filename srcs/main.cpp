@@ -1,5 +1,6 @@
 //#include "../include/Parsing.hpp"
 #include "../include/Data.hpp"
+#include "../include/Parsing.hpp"
 
 int	main(int ac, char **av)
 {
@@ -8,8 +9,16 @@ int	main(int ac, char **av)
 		std::cerr << "Error: wrong argument" << std::endl;
 		return (1);
 	}
-	Data	data(av[1]);
-	data.parse_file_and_syntax_error();
+	//Data	data(av[1]);
+	//data.parse_file_and_syntax_error();
+
+	//I WILL TAKE OFF MIME_TYPES IN DIRECTIVE
+	//TOMMROW FIX IF LOCATION AND LISTEN REPEATED
+	//AND CHECK IF EVERY VARIABLE HAVE DATA SO TO TAKE OFF THE DEFAULT SERVER
+	//IF LOCATION EMPTY JUST JUST MAKE A COPY OF THE SERVER IN THE LOCATION USING COPY CONSTRUCTER
+	Parsing	parse(av[1]);
+
+	parse.parse_file();
 
 	//Parsing	*data = new Data(av[1]);
 

@@ -5,11 +5,52 @@ Parsing::Parsing(void)
 	//std::cout << "Parsing Default constructer" << std::endl;
 }
 
+std::string	Parsing::get_mimetype_value(void)
+{
+	std::vector<std::pair<t_tokens, std::string> >::iterator	itr;
+	std::string hold;
+
+	for (itr = this->directive_itr + 1; itr->first != SEMICOLON; itr++)
+	{
+		if (itr->first == WORD)
+			hold += itr->second + " ";
+	}
+	return (hold);
+}
+
+void	Parsing::lexer_of_mimetypes(void)
+{
+	this->begin = this->tokens.begin();
+
+	if (this->begin->first == DIRECTIVE && !(this->begin++)->second.compare("types"))
+	{
+		if (this->begin->first == OPEN_BRACES && (this->tokens.end() - 1)->first == CLOSE_BRACES)
+		{
+			for (this->begin++; this->begin != this->tokens.end() - 1; this->begin++)
+			{
+				if (this->begin->first == DIRECTIVE)
+				{
+					this->directive_itr = this->begin;
+					this->check_directive_syntax();
+					this->mime_types_parse.insert(std::make_pair(this->directive_itr->second, get_mimetype_value()));
+				}
+				else
+					throw ("Error : wrong syntax of the mime.types.");
+			}
+		}
+		else
+			throw ("Error : wrong syntax of the mime.types.");
+	}
+	else
+		throw ("Error : wrong syntax of the mime.types.");
+}
+
 Parsing::Parsing(std::string file) : config_file(file)
 {
+	
 	std::cout << "Parsing string constructer" << std::endl;
 	std::pair<int[3], std::string> data;
-	std::string	directives = "listen host mime_types server_name status_page return root index allow_methods client_max_body_size autoindex cgi_info upload ";
+	std::string	directives = "listen host server_name status_page return root index allow_methods client_max_body_size autoindex cgi_info upload ";
 
 	for (int	i = 0, key = 0; !directives.empty(); i++)
 	{
@@ -23,6 +64,30 @@ Parsing::Parsing(std::string file) : config_file(file)
 		data.second = directives.substr(0, directives.find(' '));
 		directives.erase(0, directives.find(' ') + 1);
 		this->directive_name.push_back(data);
+	}
+
+	//here gad blan dial meme_types.
+	try
+	{
+		std::fstream	in;
+		//here catch the exception
+		in.open("config/mime.types");
+		if (!in.is_open())
+			throw ("Error: mime.types file not exist.");
+		std::getline(in, this->input, '\0');
+		if (this->input.empty())
+			throw ("Error: empty config file.");
+		this->turn_whitespaces_to_space();
+		this->tokenizer();
+		this->lexer_of_mimetypes();
+		//this in the end.
+		this->input.clear();
+		//exit(0);
+	}
+	catch (const char *error)
+	{
+		std::cerr << error << std::endl;
+		exit(1);
 	}
 }
 
@@ -81,7 +146,7 @@ void	Parsing::parse_file(void)
 		this->tokenizer();
 		this->lexer();
 		this->save_data_in_the_server();
-		//this->parse_mime_types();
+		//here check the final error like if listen have same port and location path and some like that
 	}
 	catch (const char *error)
 	{

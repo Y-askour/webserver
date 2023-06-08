@@ -77,3 +77,12 @@ DIRECTIVE SHOULD NOT BE REPEATED:
     -allow_methods. one server and location.
 
 Check if location repeated for example location /l two time error
+
+HTPP code status i will handle:
+    -200
+    -301
+    -400
+    -404
+    -405
+    -503
+    -505

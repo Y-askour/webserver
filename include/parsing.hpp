@@ -1,34 +1,28 @@
 #pragma once
-#include "Server.hpp"
-#include <iostream>
-#include <fstream>
-#include <cstdlib>
-#include <algorithm>
-#include <vector>
-#include <map>
+#include "Data.hpp"
 
-typedef	enum tokens {
-	SERVER,
-	LOCATION,
-	WORD,
-	DIRECTIVE,
-	OPEN_BRACES,
-	CLOSE_BRACES,
-	SEMICOLON,
-} t_tokens;
+//typedef	enum tokens {
+//	SERVER,
+//	LOCATION,
+//	WORD,
+//	DIRECTIVE,
+//	OPEN_BRACES,
+//	CLOSE_BRACES,
+//	SEMICOLON,
+//} t_tokens;
 
-class	Parsing
+class	Parsing : public Data
 {
-	protected :
-	//typedef	enum tokens {
-	//	SERVER,
-	//	LOCATION,
-	//	WORD,
-	//	DIRECTIVE,
-	//	OPEN_BRACES,
-	//	CLOSE_BRACES,
-	//	SEMICOLON,
-	//} t_tokens;
+	//protected :
+	typedef	enum tokens {
+		SERVER,
+		LOCATION,
+		WORD,
+		DIRECTIVE,
+		OPEN_BRACES,
+		CLOSE_BRACES,
+		SEMICOLON,
+	} t_tokens;
 
 	//typedef void(Default_serv::*func)(std::vector<std::string>);
 	//config file name
@@ -50,9 +44,6 @@ class	Parsing
 	//holds tokens of tokenizer to push in token
 	std::pair<t_tokens, std::string> hold;
 
-	//this vector hold all Servers and their location and i will init it to serves in data
-	std::vector<Server> server;
-
 	public :
 	//here i should add copy constructer and shiit
 		Parsing(void);
@@ -68,7 +59,8 @@ class	Parsing
 		int		iskeyword(int c);
 		void	lexer(void);
 		void	check_server_syntax(void);
-		std::vector<std::pair<t_tokens, std::string> >::iterator	get_end_closing_braces(void);
+		std::vector<std::pair<Parsing::t_tokens, std::string> >::iterator	get_end_closing_braces(void);
+		std::vector<std::pair<Parsing::t_tokens, std::string> >::iterator	get_end_closing_braces(int);
 		void	check_location_syntax();
 		void	check_directive_syntax();
 		void	check_allowed_directive_and_repetitive(int check);
@@ -84,7 +76,10 @@ class	Parsing
 		void	parse_location(void);
 		void	parse_directive(int check);
 		void	check_wish_directive(int check, std::vector<std::string> data);
-		//here parse mime_types
-		void	parse_mime_types(void);
+
+		//Parsing of mime_types
+		void	lexer_of_mimetypes(void);
+		//void	save_mimetypes_data(void);
+		std::string	get_mimetype_value(void);
 		~Parsing(void);
 };
