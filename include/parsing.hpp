@@ -81,5 +81,8 @@ class	Parsing : public Data
 		void	lexer_of_mimetypes(void);
 		//void	save_mimetypes_data(void);
 		std::string	get_mimetype_value(void);
+
+		//last parsing of server taking off the default data and check location and listen repeated
+		void	last_check_servers(void);
 		~Parsing(void);
 };

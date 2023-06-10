@@ -124,6 +124,11 @@ void	Parsing::check_location_syntax(void)
 		else
 			throw ("Error: wrong syntax.");
 	}
+	for (int i = 0; i < static_cast<int>(this->directive_name.size()); i++)
+	{
+		this->directive_name[i].first[1] = 0;
+		this->directive_name[i].first[2] = 0;
+	}
 }
 
 void	Parsing::check_server_syntax(void)

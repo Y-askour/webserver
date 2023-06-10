@@ -47,16 +47,15 @@ void	Parsing::lexer_of_mimetypes(void)
 
 Parsing::Parsing(std::string file) : config_file(file)
 {
-	
-	std::cout << "Parsing string constructer" << std::endl;
+	//std::cout << "Parsing string constructer" << std::endl;
 	std::pair<int[3], std::string> data;
 	std::string	directives = "listen host server_name status_page return root index allow_methods client_max_body_size autoindex cgi_info upload ";
 
 	for (int	i = 0, key = 0; !directives.empty(); i++)
 	{
-		if (i == 5)
+		if (i == 4)
 			key = 1;
-		else if (i > 5)
+		else if (i > 4)
 			key = 2;
 		data.first[0] = key;
 		data.first[1] = 0;
@@ -65,6 +64,7 @@ Parsing::Parsing(std::string file) : config_file(file)
 		directives.erase(0, directives.find(' ') + 1);
 		this->directive_name.push_back(data);
 	}
+	return ;
 
 	//here gad blan dial meme_types.
 	try
@@ -82,6 +82,9 @@ Parsing::Parsing(std::string file) : config_file(file)
 		this->lexer_of_mimetypes();
 		//this in the end.
 		this->input.clear();
+		//here free the tokens
+		//this->tokens.erase(this->tokens.begin(), this->tokens.end());
+		this->tokens.erase(this->tokens.begin(), this->tokens.end());
 		//exit(0);
 	}
 	catch (const char *error)
@@ -129,6 +132,17 @@ void	Parsing::turn_whitespaces_to_space(void)
 	}
 }
 
+void	Parsing::last_check_servers(void)
+{
+	for (int	i = 0; i < static_cast<int>(this->servers.size()); i++)
+	{
+		this->servers[i].take_off_default_setup();
+		this->servers[i].check_server_setup_duplicate();
+		//this->servers[i].check_server_setup_duplicate();
+		//this->servers[i].check_if_location_repeated();
+	}
+}
+
 void	Parsing::parse_file(void)
 {
 	try
@@ -146,6 +160,8 @@ void	Parsing::parse_file(void)
 		this->tokenizer();
 		this->lexer();
 		this->save_data_in_the_server();
+		this->last_check_servers();
+		//while (1);
 		//here check the final error like if listen have same port and location path and some like that
 	}
 	catch (const char *error)

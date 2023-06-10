@@ -22,7 +22,6 @@
 ALL_DIRECTIVES:
 0    -listen.
 0    -host.
-0    -mime_types.
 0    -server_name.
 0    -status_page.
 1    -return.
@@ -39,7 +38,6 @@ ALLOW_DIRECTIVE_IN_SERVER:
     -host.
     -root.
     -index.
-    -mime_types.
     -server_name.
     -status_page.
     -allow_methods.
@@ -73,7 +71,6 @@ DIRECTIVE SHOULD NOT BE REPEATED:
     -client_max_body_size.
     -upload.
     -auto_index.
-    -mime_types. one server also you need to check path and parse it.
     -allow_methods. one server and location.
 
 Check if location repeated for example location /l two time error
