@@ -67,7 +67,7 @@ class	Parsing : public Data
 		//int		find_directive(void);
 		std::vector<std::pair<int[3], std::string> >::iterator	find_directive(void);
 		void	strtrim(void);
-		void	turn_separator_to_space(void);
+		void	turn_sparse_mime_typeseparator_to_space(void);
 		void	check_directive_value_length(void);
 
 		//function to hold data in the server
@@ -81,6 +81,7 @@ class	Parsing : public Data
 		void	lexer_of_mimetypes(void);
 		//void	save_mimetypes_data(void);
 		std::string	get_mimetype_value(void);
+		void	parse_mime_types(void);
 
 		//last parsing of server taking off the default data and check location and listen repeated
 		void	last_check_servers(void);

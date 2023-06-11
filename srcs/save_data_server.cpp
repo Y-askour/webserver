@@ -57,7 +57,10 @@ void	Parsing::parse_location(void)
 	std::vector<std::pair<t_tokens, std::string> >::iterator	iter;
 	int	size_location = (*(this->servers.end() - 1)).get_location_size();
 	//Location	location((*(this->servers.end() - 1)));
-	Location	location;
+	Location	*location = new Location;
+	std::pair<std::string, Location*> hold;
+	//std::pair<std::string, Location*>	hold((this->begin + 1)->second, location);
+
 	//std::vector<std::string> a;
 	//a.push_back("222");
 	//location.add_listen(a);
@@ -67,13 +70,17 @@ void	Parsing::parse_location(void)
 	//(*(this->servers.end() - 1)).add_locations(a);
 	
 	//HENA MAFHMETCH 7TA 9LWA F BLAN DIAL DISTRUCTERS
-	(*(this->servers.end() - 1)).add_locations(std::make_pair((this->begin + 1)->second, location));
+	//(*(this->servers.end() - 1)).add_locations(std::make_pair((this->begin + 1)->second, location));
+	hold.first = (this->begin + 1)->second;
+	hold.second = location;
+	(*(this->servers.end() - 1)).add_locations(hold);
 	//while (1);
 	if ((*(this->servers.end() - 1)).get_location_size() == size_location)
 		throw ("Error: path of location is repeated.");
 	iter = this->get_end_closing_braces(0);
 	for (; this->begin != iter; this->begin++)
 	{
+		std::cout << "  " << this->begin->second << std::endl;
 		if (this->begin->first == DIRECTIVE)
 			this->parse_directive(1);
 	}
@@ -90,6 +97,7 @@ void	Parsing::parse_server(void)
 	this->end = this->get_end_closing_braces(0);
 	for (; this->begin != this->end; this->begin++)
 	{
+		std::cout << this->begin->second << std::endl;
 		if (this->begin->first == DIRECTIVE)
 			this->parse_directive(0);
 		else if (this->begin->first == LOCATION)

@@ -6,6 +6,12 @@ Data::Data()
 	//constructer
 }
 
+Data::Data(const Data & obj)
+{
+	this->mime_types_parse = obj.mime_types_parse;
+	this->servers = obj.servers;
+}
+
 Data::Data(std::string name)
 {
 	(void)name;

@@ -16,7 +16,9 @@ class Data
 	std::vector<Server> servers;
 	public :
 		Data();
+		Data(const Data & obj);
 		Data(std::string name);
+		//void	print_config(void);
 		//std::vector<std::pair<t_tokens, std::string> >::iterator	get_end_closing_braces(void);
 
 		//std::vector<std::pair<t_tokens, std::string> >::iterator	get_end_closing_braces(void);
