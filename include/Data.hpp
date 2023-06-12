@@ -13,8 +13,8 @@ class Data
 	protected :
 	//std::vector<std::pair<std::string, std::string> > mime_types_parse;
 	std::map<std::string, std::string>	mime_types_parse;
-	std::vector<Server> servers;
 	public :
+		std::vector<Server> servers;
 		Data();
 		Data(const Data & obj);
 		Data(std::string name);

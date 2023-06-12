@@ -37,7 +37,11 @@ void	Parsing::check_wish_directive(int check, std::vector<std::string> data)
 			if (!check)
 				((*(this->servers.end() - 1)).*serv_func[i])(data);
 			else
+			{
+				//Location *test = &this->servers[0].locations.begin()->second;
+
 				((*(this->servers.end() - 1)).locations_getter().*serv_func[i])(data);
+			}
 			return ;
 		}
 	}
@@ -56,9 +60,11 @@ void	Parsing::parse_location(void)
 {
 	std::vector<std::pair<t_tokens, std::string> >::iterator	iter;
 	int	size_location = (*(this->servers.end() - 1)).get_location_size();
+	Location	location;
 	//Location	location((*(this->servers.end() - 1)));
-	Location	*location = new Location;
-	std::pair<std::string, Location*> hold;
+	//Location	*location = new Location;
+	std::pair<std::string, Location&> hold((this->begin + 1)->second, location);
+
 	//std::pair<std::string, Location*>	hold((this->begin + 1)->second, location);
 
 	//std::vector<std::string> a;
@@ -70,17 +76,18 @@ void	Parsing::parse_location(void)
 	//(*(this->servers.end() - 1)).add_locations(a);
 	
 	//HENA MAFHMETCH 7TA 9LWA F BLAN DIAL DISTRUCTERS
+	//std::cout << "baln " << std::endl;
 	//(*(this->servers.end() - 1)).add_locations(std::make_pair((this->begin + 1)->second, location));
-	hold.first = (this->begin + 1)->second;
-	hold.second = location;
-	(*(this->servers.end() - 1)).add_locations(hold);
+	//hold.first = (this->begin + 1)->second;
+	//hold.second = location;
+	//(*(this->servers.end() - 1)).add_locations(hold);
+	this->servers[0].add_locations(hold);
 	//while (1);
 	if ((*(this->servers.end() - 1)).get_location_size() == size_location)
 		throw ("Error: path of location is repeated.");
 	iter = this->get_end_closing_braces(0);
 	for (; this->begin != iter; this->begin++)
 	{
-		std::cout << "  " << this->begin->second << std::endl;
 		if (this->begin->first == DIRECTIVE)
 			this->parse_directive(1);
 	}
@@ -97,7 +104,6 @@ void	Parsing::parse_server(void)
 	this->end = this->get_end_closing_braces(0);
 	for (; this->begin != this->end; this->begin++)
 	{
-		std::cout << this->begin->second << std::endl;
 		if (this->begin->first == DIRECTIVE)
 			this->parse_directive(0);
 		else if (this->begin->first == LOCATION)

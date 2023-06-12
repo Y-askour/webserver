@@ -2,6 +2,12 @@
 #include "../include/Data.hpp"
 #include "../include/Parsing.hpp"
 
+//void	print(std::vector<int>::iterator it)
+void	print(int it)
+{
+	std::cout << it << std::endl;
+}
+
 int	main(int ac, char **av)
 {
 	//if the execubale have default use the default config file
@@ -28,6 +34,21 @@ int	main(int ac, char **av)
 	Data data(*parse);
 
 	delete parse;
+
+	//int i = 0;
+	//while (i < static_cast<int>(data.servers.size()))
+	//{
+		std::cout << "--------------" << std::endl;
+		//std::vector<int> test = 
+		//std::cout <<  data.servers[i].get_listen() << std::endl;
+		std::vector<int> zb= data.servers[0].get_listen();
+		for (std::vector<int>::iterator it = zb.begin(); it != zb.end(); it++)
+		{
+			std::cout << *it << std::endl;
+		}
+		//std::for_each(data.servers[0].get_listen().begin(), data.servers[0].get_listen().end(), print);
+		//i++;
+	//}
 	//data.print_config();
 
 
