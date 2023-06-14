@@ -1,9 +1,4 @@
-//in lexer check if directive duplicate
-//and in here when to save data check with std::count if parameter are repeated
-//also i will check location /path when i enter it in map
-//******NOW I WILL HANDLE IF WORD ARE REPETED FOR LISTEN AND LOCATION also check int value like listen 222
 #include "../include/Parsing.hpp"
-//#include "Location.hpp"
 
 std::vector<std::pair<Parsing::t_tokens, std::string> >::iterator	Parsing::get_end_closing_braces(int)
 {
@@ -25,23 +20,19 @@ std::vector<std::pair<Parsing::t_tokens, std::string> >::iterator	Parsing::get_e
 void	Parsing::check_wish_directive(int check, std::vector<std::string> data)
 {
 	typedef void(Default_serv::*func)(std::vector<std::string>);
-	func serv_func[] = {&Default_serv::add_listen, &Default_serv::add_host, \
-		&Default_serv::add_server_name, &Default_serv::add_status_page, \
-			&Default_serv::add_return, &Default_serv::add_root, &Default_serv::add_index, \
-			&Default_serv::add_allow_methods, &Default_serv::add_client_max_body_size, \
-			&Default_serv::add_autoindex, &Default_serv::add_cgi_info, &Default_serv::add_upload};
+	func serv_func[] = {&Default_serv::set_listen, &Default_serv::set_host, \
+		&Default_serv::set_server_name, &Default_serv::set_status_page, \
+			&Default_serv::set_return, &Default_serv::set_root, &Default_serv::set_index, \
+			&Default_serv::set_allow_methods, &Default_serv::set_client_max_body_size, \
+			&Default_serv::set_autoindex, &Default_serv::set_cgi_info, &Default_serv::set_upload};
 	for (int	i = 0; i < static_cast<int>(this->directive_name.size()); i++)
 	{
 		if (!this->directive_itr->second.compare(this->directive_name[i].second))
 		{
 			if (!check)
-				((*(this->servers.end() - 1)).*serv_func[i])(data);
+				((*(this->servers.end() - 1))->*serv_func[i])(data);
 			else
-			{
-				//Location *test = &this->servers[0].locations.begin()->second;
-
-				((*(this->servers.end() - 1)).locations_getter().*serv_func[i])(data);
-			}
+				(*(std::prev((*(this->servers.end() - 1))->get_location().end()))->second.*serv_func[i])(data);
 			return ;
 		}
 	}
@@ -58,32 +49,15 @@ void	Parsing::parse_directive(int check)
 
 void	Parsing::parse_location(void)
 {
+	unsigned long	size_location;
+	Location	*location = new Location();
 	std::vector<std::pair<t_tokens, std::string> >::iterator	iter;
-	int	size_location = (*(this->servers.end() - 1)).get_location_size();
-	Location	location;
-	//Location	location((*(this->servers.end() - 1)));
-	//Location	*location = new Location;
-	std::pair<std::string, Location&> hold((this->begin + 1)->second, location);
+	std::pair<std::string, Location*> hold((this->begin + 1)->second, location);
+	this->servers_itr = std::prev(this->get_servers().end());
 
-	//std::pair<std::string, Location*>	hold((this->begin + 1)->second, location);
-
-	//std::vector<std::string> a;
-	//a.push_back("222");
-	//location.add_listen(a);
-	//std::pair<std::string, Location> a;
-	//a.first = (this->begin + 1)->second;
-	//a.second = location;
-	//(*(this->servers.end() - 1)).add_locations(a);
-	
-	//HENA MAFHMETCH 7TA 9LWA F BLAN DIAL DISTRUCTERS
-	//std::cout << "baln " << std::endl;
-	//(*(this->servers.end() - 1)).add_locations(std::make_pair((this->begin + 1)->second, location));
-	//hold.first = (this->begin + 1)->second;
-	//hold.second = location;
-	//(*(this->servers.end() - 1)).add_locations(hold);
-	this->servers[0].add_locations(hold);
-	//while (1);
-	if ((*(this->servers.end() - 1)).get_location_size() == size_location)
+	size_location = (*(this->servers.end() - 1))->get_location().size();
+	(*(this->servers.end() - 1))->set_locations(hold);
+	if ((*this->servers_itr)->get_location().size() == size_location)
 		throw ("Error: path of location is repeated.");
 	iter = this->get_end_closing_braces(0);
 	for (; this->begin != iter; this->begin++)
@@ -95,12 +69,9 @@ void	Parsing::parse_location(void)
 
 void	Parsing::parse_server(void)
 {
-	Server	serv;
+	Server	*serv = new Server();
 
 	this->servers.push_back(serv);
-	//std::vector<std::string> a;
-	//a.push_back("222");
-	//this->servers[0].add_listen(a);
 	this->end = this->get_end_closing_braces(0);
 	for (; this->begin != this->end; this->begin++)
 	{
@@ -108,7 +79,6 @@ void	Parsing::parse_server(void)
 			this->parse_directive(0);
 		else if (this->begin->first == LOCATION)
 			this->parse_location();
-		//return ;
 	}
 }
 

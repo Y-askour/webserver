@@ -1,25 +1,24 @@
 #include "../include/Server.hpp"
 
-Server::Server() : Default_serv()
+Server::Server() : Default_serv() {std::cout << "server constructer" << std::endl;}
+
+//getter
+std::map<std::string, Location*>	&Server::get_location(void)
 {
-	//std::cout << "Server Default constructer" << std::endl;
-	//constructer
+	return (this->locations);
 }
 
-//void	Server::check_if_location_repeated(void)
-//{
-//	std::map<std::string, Location>::iterator	itr;
-//	for (itr = this->locations.begin(); itr != this->locations.end(); itr++)
-//	{
-//		//std::cout << itr->first << std::endl;
-//		if (this->locations.count(itr->first) > 1)
-//			throw ("Error: path of location is repeated.");
-//	}
-//	//(*locations.begin()).second.check_server_setup_duplicate();
-//}
+//setters
+void	Server::set_locations(std::pair<std::string, Location*> data)
+{
+	this->locations.insert(data);
+}
 
 Server::~Server()
 {
-	//std::cout << "Server Default destructer" << std::endl;
-	//destructer
+	std::cout << "Server Default destructer" << std::endl;
+	std::map<std::string, Location*>::iterator itr;
+	for (itr = this->locations.begin(); itr != this->locations.end(); itr++)
+		delete itr->second;
+	//here delete location
 }

@@ -41,13 +41,11 @@ void	Parsing::check_allowed_directive_and_repetitive(int check)
 	{
 		if (iter->first[0] == 1)
 			throw ("Error: misplaced directive place only use in location.");
-		//iter->first[1]++;
 		if ((!iter->second.compare("host") || !iter->second.compare("root") \
 				|| !iter->second.compare("upload") || !iter->second.compare("autoindex") \
 				|| !iter->second.compare("allow_methods") || !iter->second.compare("client_max_body_size")))
 		{
 			iter->first[1]++;
-			//std::cout << iter->second << std::endl;
 			if (iter->first[1] > 1)
 				throw ("Error: wrong syntax repeated directive in server.");
 		}
@@ -57,7 +55,6 @@ void	Parsing::check_allowed_directive_and_repetitive(int check)
 	{
 		if (iter->first[0] == 0)
 			throw ("Error: misplaced directive place only use in server.");
-		//iter->first[2]++;
 		if ((!iter->second.compare("host") || !iter->second.compare("root") \
 				|| !iter->second.compare("upload") || !iter->second.compare("autoindex") \
 				|| !iter->second.compare("allow_methods") || !iter->second.compare("client_max_body_size")))

@@ -1,19 +1,8 @@
 #pragma once
 #include "Data.hpp"
 
-//typedef	enum tokens {
-//	SERVER,
-//	LOCATION,
-//	WORD,
-//	DIRECTIVE,
-//	OPEN_BRACES,
-//	CLOSE_BRACES,
-//	SEMICOLON,
-//} t_tokens;
-
 class	Parsing : public Data
 {
-	//protected :
 	typedef	enum tokens {
 		SERVER,
 		LOCATION,
@@ -24,10 +13,9 @@ class	Parsing : public Data
 		SEMICOLON,
 	} t_tokens;
 
-	//typedef void(Default_serv::*func)(std::vector<std::string>);
 	//config file name
 	std::string	config_file;
-	//here where i put the file
+	//here where i put the file when i read it
 	std::string	input;
 	//this one hold tokens of the file
 	std::vector<std::pair<t_tokens, std::string> > tokens;
@@ -64,7 +52,6 @@ class	Parsing : public Data
 		void	check_location_syntax();
 		void	check_directive_syntax();
 		void	check_allowed_directive_and_repetitive(int check);
-		//int		find_directive(void);
 		std::vector<std::pair<int[3], std::string> >::iterator	find_directive(void);
 		void	strtrim(void);
 		void	turn_sparse_mime_typeseparator_to_space(void);
@@ -79,11 +66,12 @@ class	Parsing : public Data
 
 		//Parsing of mime_types
 		void	lexer_of_mimetypes(void);
-		//void	save_mimetypes_data(void);
 		std::string	get_mimetype_value(void);
 		void	parse_mime_types(void);
 
-		//last parsing of server taking off the default data and check location and listen repeated
+		//last steps check duplicate element and take off default setup
 		void	last_check_servers(void);
+		//this is for default server building
+		void	make_default_server(void);
 		~Parsing(void);
 };

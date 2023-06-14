@@ -6,29 +6,16 @@
 class Server : public Default_serv
 {
 	//here location
+	std::map<std::string, Location*> locations;
+
 	public :
-		std::map<std::string, Location&> locations;
 		Server();
-		Location	&locations_getter(void)
-		{
-			std::map<std::string, Location&>::iterator itr = this->locations.end();
-			itr--;
-			return (itr->second);
-		}
 
-		//void	check_if_location_repeated(void);
+		//getters
+		std::map<std::string, Location*>	&get_location(void);
 
-		int	get_location_size(void)
-		{
-			return (static_cast<int>(this->locations.size()));
-		}
+		//setters
+		void	set_locations(std::pair<std::string, Location*> data);
 
-		//void	add_locations(std::pair<std::string, &Location> data)
-		//void	add_locations(std::pair<std::string, Location> data)
-		void	add_locations(std::pair<std::string, Location&> &data)
-		{
-			//(void)data;
-			this->locations.insert(data);
-		}
 		~Server();
 };

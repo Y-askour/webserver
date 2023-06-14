@@ -45,7 +45,6 @@ void	Parsing::parse_mime_types(void)
 	try
 	{
 		std::fstream	in;
-		//here catch the exception
 		in.open("config/mime.types");
 		if (!in.is_open())
 			throw ("Error: mime.types file not exist.");
@@ -55,17 +54,13 @@ void	Parsing::parse_mime_types(void)
 		this->turn_whitespaces_to_space();
 		this->tokenizer();
 		this->lexer_of_mimetypes();
-		//this in the end.
 		this->input.clear();
-		//here free the tokens
-		//this->tokens.erase(this->tokens.begin(), this->tokens.end());
 		this->tokens.erase(this->tokens.begin(), this->tokens.end());
-		//exit(0);
+		in.close();
 	}
 	catch (const char *error)
 	{
 		std::cerr << error << std::endl;
 		exit(1);
 	}
-
 }
