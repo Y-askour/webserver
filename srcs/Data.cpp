@@ -1,15 +1,16 @@
 #include "../include/Data.hpp"
 
-Data::Data() {
-	std::cout << "Data Default constructer" << std::endl;
+Data::Data()
+{
+	//std::cout << "Data Default constructer" << std::endl;
 }
 
 Data::Data(const Data & obj)
 {
-	std::cout << "Data obj constructer" << std::endl;
+	//std::cout << "Data obj constructer" << std::endl;
 	this->mime_types_parse = obj.mime_types_parse;
 	this->servers = obj.servers;
-	std::cout << "dddd" << std::endl;
+	//std::cout << "dddd" << std::endl;
 }
 
 std::vector<Server*> &Data::get_servers(void)
@@ -26,7 +27,7 @@ void	Data::parse_file_and_syntax_error(void)
 
 Data::~Data()
 {
-	std::cout << "Data Default destructer" << std::endl;
+	//std::cout << "Data Default destructer" << std::endl;
 	//std::vector<Server*>::iterator itr;
 	//for (itr = this->servers.begin(); itr != this->servers.end(); itr++)
 	//	delete *itr;

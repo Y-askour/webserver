@@ -88,10 +88,7 @@ void run_server(int listen_fd)
 			return ;
 		}
 		else if (!ret)
-		{
-			//std::cout <<  "timemout occured" << "  number of fds : " << nb_of_fds << std::endl; 
 			continue;
-		}
 		else
 		{
 			for (int i = 0; i < nb_of_fds;i++)
@@ -99,8 +96,6 @@ void run_server(int listen_fd)
 				if (fds[i].revents & POLLIN)
 				{
 					//std::cout << "pollin" << std::endl;
-					if (fds[i].fd == listen_fd)
-					{
 						socklen_t addr_size = sizeof communication;
 						int fd_client = accept(listen_fd,&communication,&addr_size);
 						if (fd_client == -1)
@@ -118,20 +113,15 @@ void run_server(int listen_fd)
 						fds[nb_of_fds].fd = fd_client;
 						fds[nb_of_fds].events = POLLOUT;
 						nb_of_fds++;
-					}
 				}
-
 				if (fds[i].revents & POLLOUT)
 				{
-					//std::cout << "pollout" << std::endl;
 
 					if (send(fds[i].fd,msg.c_str(),msg.length(),MSG_OOB) == -1)
 					{
-						//std::cout << fds[i].fd << std::endl;
 						perror("webserv(send)");
 						return ;
 					}
-					//std::cout << "sended : " << fds[i].fd  << " number of waiting fds : " << nb_of_fds << std::endl;
 
 					close(fds[i].fd);
 					for (int j = i;j < nb_of_fds - 1;j++)

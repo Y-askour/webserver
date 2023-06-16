@@ -1,8 +1,21 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Default_serv.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/06/16 19:10:28 by yaskour           #+#    #+#             */
+/*   Updated: 2023/06/16 21:33:49 by yaskour          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Default_serv.hpp"
 
 //this one for the server
 Default_serv::Default_serv(void)
-{std::cout << "Defautl_serv constructer" << std::endl;
+{
+	//std::cout << "Defautl_serv constructer" << std::endl;
 	this->listen.push_back(8080);
 	this->index.push_back("index.html");
 	this->server_name.push_back("localhost");
