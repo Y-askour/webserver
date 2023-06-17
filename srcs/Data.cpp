@@ -10,6 +10,8 @@ Data::Data(const Data & obj)
 	//std::cout << "Data obj constructer" << std::endl;
 	this->mime_types_parse = obj.mime_types_parse;
 	this->servers = obj.servers;
+	this->create_listen_sockets();
+
 	//std::cout << "dddd" << std::endl;
 }
 
@@ -31,4 +33,24 @@ Data::~Data()
 	//std::vector<Server*>::iterator itr;
 	//for (itr = this->servers.begin(); itr != this->servers.end(); itr++)
 	//	delete *itr;
+}
+
+void Data::create_listen_sockets()
+{
+	std::vector<int> ports;
+	std::vector<Server *>::iterator it = this->servers.begin();
+	while (it != this->servers.end())
+	{
+		std::vector<int> serverPort = (*it)->get_listen();
+		std::vector<int>::iterator n = serverPort.begin();
+		while (n != serverPort.end())
+		{
+			Connection socket(*(*it),*n);
+			this->connections.push_back(socket);
+			socket.get_fd();
+			socket.get_something_from_server();
+			n++;
+		}
+		it++;
+	}
 }
