@@ -33,16 +33,15 @@ Connection::Connection(Server &server,int port): server(server)
 		perror("webserv(listen)");
 	}
 	this->fd = listen_fd;
-	//this->server.get_listen();
 }
 
 Connection::~Connection()
 {
 }
 
-void Connection::get_fd()
+int Connection::get_fd()
 {
-	std::cout << this->fd << std::endl;
+	return this->fd;
 }
 
 void Connection::get_something_from_server()

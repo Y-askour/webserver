@@ -1,18 +1,18 @@
 #include "../include/Data.hpp"
+#include <cstdio>
+#include <sys/poll.h>
+#include <sys/socket.h>
 
 Data::Data()
 {
-	//std::cout << "Data Default constructer" << std::endl;
 }
 
 Data::Data(const Data & obj)
 {
-	//std::cout << "Data obj constructer" << std::endl;
 	this->mime_types_parse = obj.mime_types_parse;
 	this->servers = obj.servers;
 	this->create_listen_sockets();
-
-	//std::cout << "dddd" << std::endl;
+	this->run_server();
 }
 
 std::vector<Server*> &Data::get_servers(void)
@@ -22,17 +22,12 @@ std::vector<Server*> &Data::get_servers(void)
 
 void	Data::parse_file_and_syntax_error(void)
 {
-	//std::cout << this->servers[0]->l().begin()->second->get_root() << std::endl;
 	std::cout << "d" << std::endl;
 	std::cout << this->servers[0]->get_location().begin()->second->get_cgi_info()[0].first << std::endl;
 }
 
 Data::~Data()
 {
-	//std::cout << "Data Default destructer" << std::endl;
-	//std::vector<Server*>::iterator itr;
-	//for (itr = this->servers.begin(); itr != this->servers.end(); itr++)
-	//	delete *itr;
 }
 
 void Data::create_listen_sockets()
@@ -47,10 +42,91 @@ void Data::create_listen_sockets()
 		{
 			Connection socket(*(*it),*n);
 			this->connections.push_back(socket);
-			socket.get_fd();
-			socket.get_something_from_server();
 			n++;
 		}
 		it++;
+	}
+}
+
+void Data::run_server()
+{
+	struct sockaddr client_struct;
+	this->nb_clients =0;
+	std::vector<Connection>::iterator it = this->connections.begin();
+	while (it != this->connections.end())
+	{
+		this->poll_fd[nb_clients].fd = (*it).get_fd();
+		this->poll_fd[nb_clients].events = POLLIN;
+		nb_clients++;
+		it++;
+	}
+
+	std::ifstream f("./younes/www/html/index.html");
+	std::string body = "<html>  <body> <h1>test<h1> </body> </html>\r\n";
+	if (f)
+	{
+		std::ostringstream ss;
+		ss << f.rdbuf();
+		body = ss.str();
+	}
+	std::string msg = "HTTP/1.1 200 OK\r\n";
+	msg += "Content-Type: text/html\r\n";
+	msg += "Content-Length:" + std::to_string(body.length()) + "\r\n";
+	msg += "\r\n";
+	msg += body;
+	while (1)
+	{
+		int ret = poll(this->poll_fd,this->nb_clients,0);
+		if (ret == -1)
+		{
+			std::perror("webserv(poll)");
+			return ;
+		}
+		else if (!ret)
+			continue ;
+		for (int i = 0; i < this->nb_clients; i++)
+		{
+			if (this->poll_fd[i].revents & POLLIN)
+			{
+
+				socklen_t addr_size = sizeof client_struct;
+				int client_fd = accept(this->poll_fd[i].fd, &client_struct,&addr_size);
+				if (client_fd < 0)
+				{
+					perror("webserv(accept)");
+					return ;
+				}
+				char buf[1000011];
+				ssize_t s = recv(client_fd,buf,1000000,0);
+				buf[s] = 0;
+
+
+				// add the client fd to the list
+				this->poll_fd[nb_clients].fd = client_fd;
+				this->poll_fd[nb_clients].events = POLLOUT;
+				nb_clients++;
+				std::cout << "recv" << std::endl;
+			}
+			else if (this->poll_fd[i].revents & POLLOUT)
+			{
+				if (send(this->poll_fd[i].fd,msg.c_str(),msg.length(),0) == -1)
+				{
+					perror("webserv(send)");
+					return ;
+				}
+				close(this->poll_fd[i].fd);
+				for (int j = i; j < this->nb_clients -1;j++)
+				{
+					this->poll_fd[j].fd = this->poll_fd[j + 1].fd;
+					this->poll_fd[j].events = this->poll_fd[j + 1].events;
+					this->poll_fd[j + 1].revents = this->poll_fd[j + 1].revents;
+				}
+				this->poll_fd[this->nb_clients -1].fd = 0;
+				this->poll_fd[this->nb_clients -1].events = 0;
+				this->poll_fd[this->nb_clients -1].revents = 0;
+				nb_clients--;
+				std::cout << "send" << std::endl;
+			}
+		}
 	}
 }

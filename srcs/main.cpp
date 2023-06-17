@@ -31,8 +31,6 @@ int	main(int ac, char **av)
 	}
 	//in case of webserv empty kay5wer fe constructers and SEGV
 	Data data(return_parsing_obj(ac, av[1]));
-	while(1)
-		;
 	return (0);
 }
 

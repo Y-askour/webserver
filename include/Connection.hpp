@@ -13,6 +13,6 @@ class Connection
 	public:
 		Connection(Server &server,int port);
 		~Connection();
-		void get_fd();
+		int get_fd();
 		void get_something_from_server();
 };
