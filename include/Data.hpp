@@ -17,7 +17,7 @@ class Data
 	public :
 		Data();
 		Data(const Data & obj);
-		void	parse_file_and_syntax_error(void);
+		Data	& operator=(const Data & obj);
 		//getters
 		std::vector<Server*> &get_servers(void);
 		//setters

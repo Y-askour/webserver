@@ -6,7 +6,7 @@
 /*   By: hkaddour <hkaddour@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/10 10:34:30 by hkaddour          #+#    #+#             */
-/*   Updated: 2023/06/14 12:31:21 by hkaddour         ###   ########.fr       */
+/*   Updated: 2023/06/19 10:06:47 by hkaddour         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,8 +37,11 @@ class Default_serv
 	std::vector<std::pair<int, std::string> > retur;
 
 	public :
+		//constructers
 		Default_serv(void);
 		Default_serv(int);
+		Default_serv(const Default_serv & obj);
+		Default_serv & operator=(const Default_serv & obj);
 		//setters
 		void	set_listen(std::vector<std::string> data);
 		void	set_index(std::vector<std::string> data);
@@ -57,7 +60,7 @@ class Default_serv
 
 		//parsing it
 		void	take_off_default_setup(void);
-		void	check_server_setup_duplicate(void);
+		void	check_server_setup_duplicate(std::vector<int> &port_checking);
 		int		check_if_number(std::string data);
 		void	check_status_code(std::string data);
 

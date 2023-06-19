@@ -10,9 +10,13 @@ class Server : public Default_serv
 
 	public :
 		Server();
+		//Server(const Server & obj);
+		Server(Server & obj);
+		//Server & operator=(const Server & obj);
+		Server & operator=(Server & obj);
 
 		//getters
-		std::map<std::string, Location*>	&get_location(void);
+		std::map<std::string, Location*>	& get_location(void);
 
 		//setters
 		void	set_locations(std::pair<std::string, Location*> data);

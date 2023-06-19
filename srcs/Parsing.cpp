@@ -1,13 +1,13 @@
 #include "../include/Parsing.hpp"
 
-Parsing::Parsing(void)
+Parsing::Parsing(void) : Data()
 {
-	std::cout << "Parsing Default constructer" << std::endl;
+	//std::cout << "Parsing Default constructer" << std::endl;
 }
 
-Parsing::Parsing(std::string file) : config_file(file)
+Parsing::Parsing(std::string file) : Data(), config_file(file)
 {
-	std::cout << "Parsing string constructer" << std::endl;
+	//std::cout << "Parsing string constructer" << std::endl;
 	std::pair<int[3], std::string> data;
 	std::string	directives = "listen host server_name status_page return root index allow_methods client_max_body_size autoindex cgi_info upload ";
 
@@ -74,10 +74,19 @@ void	Parsing::turn_whitespaces_to_space(void)
 
 void	Parsing::last_check_servers(void)
 {
+	//this vector have all servers port to check if any server have the same port that listen in
+	std::vector<int> port_checking;
+
 	for (int	i = 0; i < static_cast<int>(this->servers.size()); i++)
 	{
 		this->servers[i]->take_off_default_setup();
-		this->servers[i]->check_server_setup_duplicate();
+		this->servers[i]->check_server_setup_duplicate(port_checking);
+	}
+	std::vector<int>::iterator itr;
+	for (itr = port_checking.begin(); itr != port_checking.end(); itr++)
+	{
+		if (std::count(port_checking.begin(), port_checking.end(), *itr) > 1)
+			throw ("Error: servers have duplicate ports.");
 	}
 }
 
@@ -110,9 +119,9 @@ void	Parsing::parse_file(void)
 
 Parsing::~Parsing(void)
 {
-	std::cout << "Parsing Default destructer" << std::endl;
-	std::vector<Server*>::iterator itr;
-	for (itr = this->servers.begin(); itr != this->servers.end(); itr++)
-		delete *itr;
+	//std::cout << "Parsing Default destructer" << std::endl;
+	//std::vector<Server*>::iterator itr;
+	//for (itr = this->servers.begin(); itr != this->servers.end(); itr++)
+	//	delete *itr;
 	//destructer
 }

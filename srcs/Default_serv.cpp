@@ -2,7 +2,8 @@
 
 //this one for the server
 Default_serv::Default_serv(void)
-{std::cout << "Defautl_serv constructer" << std::endl;
+{
+	//std::cout << "Defautl_serv constructer" << std::endl;
 	this->listen.push_back(8080);
 	this->index.push_back("index.html");
 	this->server_name.push_back("localhost");
@@ -22,7 +23,31 @@ Default_serv::Default_serv(void)
 }
 
 //this one for location
-Default_serv::Default_serv(int) {}
+Default_serv::Default_serv(int) {
+	//std::cout << "Defautl_serv for location constructer" << std::endl;
+}
+
+Default_serv::Default_serv(const Default_serv & obj)
+{
+	*this = obj;
+}
+
+Default_serv & Default_serv::operator=(const Default_serv & obj)
+{
+	this->listen = obj.listen;
+	this->index = obj.index;
+	this->server_name = obj.server_name;
+	this->status_page = obj.status_page;
+	this->cgi_info = obj.cgi_info;
+	this->host = obj.host;
+	this->root = obj.root;
+	this->client_max_body_size = obj.client_max_body_size;
+	this->upload = obj.upload;
+	this->autoindex = obj.autoindex;
+	this->allow_methods = obj.allow_methods;
+	this->retur = obj.retur;
+	return (*this);
+}
 
 //parsing
 void	Default_serv::take_off_default_setup(void)
@@ -37,10 +62,11 @@ void	Default_serv::take_off_default_setup(void)
 		this->allow_methods.erase(this->allow_methods.begin());
 }
 
-void	Default_serv::check_server_setup_duplicate(void)
+void	Default_serv::check_server_setup_duplicate(std::vector<int> &port_checking)
 {
 	for (int	i = 0; i < static_cast<int>(this->listen.size()); i++)
 	{
+		port_checking.push_back(this->listen[i]);
 		if (std::count(this->listen.begin(), this->listen.end(), this->listen[i]) > 1)
 			throw ("Error: listen have a repeated post.");
 	}
@@ -275,5 +301,5 @@ std::vector<std::pair<int, std::string> >	Default_serv::get_retur(void) const
 
 Default_serv::~Default_serv(void)
 {
-	std::cout << "Default_serv default destructer." << std::endl;
+	//std::cout << "Default_serv default destructer." << std::endl;
 }
