@@ -33,5 +33,3 @@ int	main(int ac, char **av)
 	Data data(return_parsing_obj(ac, av[1]));
 	return (0);
 }
-
-

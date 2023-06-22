@@ -21,7 +21,7 @@ class Data
 	std::vector<Server*> servers;
 	std::vector<Server*>::iterator	servers_itr;
 	int nb_clients;
-	struct pollfd poll_fd[255];
+	struct pollfd poll_fd[5];
 	public :
 		Data();
 		Data(const Data & obj);
@@ -34,4 +34,5 @@ class Data
 		//setters
 		void create_listen_sockets();
 		void run_server();
+		int get_number_of_clients();
 };

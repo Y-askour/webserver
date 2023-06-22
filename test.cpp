@@ -15,6 +15,33 @@
 #include <iostream>
 #include <sstream>
 
+void print_struct(void *tst,int size)
+{
+	struct pollfd *fd = (struct pollfd *) tst;
+	int i = 0;
+	while (i < size)
+	{
+		std::cout <<  "fd[" <<  i << "]" <<  fd[i].fd << " " << fd[i].events  << " " << fd[i].revents << std::endl;
+		i++;
+	}
+}
+
+void delete_fd(void *tst,int i,int *nb_of_fd)
+{
+	struct pollfd *fd = (struct pollfd *) tst;
+	close(fd[i].fd);
+	for (int j = i;j < *nb_of_fd - 1;j++)
+	{
+		fd[j].fd =  fd[j + 1].fd;
+		fd[j].events =  fd[j + 1].events;
+		fd[j].revents =  fd[j + 1].revents;
+	}
+	fd[*nb_of_fd -1].revents = 0;
+	fd[*nb_of_fd -1].fd = 0;
+	fd[*nb_of_fd -1].events = 0;
+	*nb_of_fd = *nb_of_fd - 1;
+}
+
 int create_connection(int port)
 {
 	int yes=1;
@@ -59,10 +86,12 @@ int create_connection(int port)
 void run_server(int listen_fd)
 {
 	int nb_of_fds = 0;
-	struct pollfd fds[1024];
+	struct pollfd fds[5];
+	memset(fds, 0, sizeof(fds));
 	fds[nb_of_fds].fd = listen_fd;
 	fds[nb_of_fds].events = POLLIN;
 	nb_of_fds++;
+
 	struct sockaddr communication;
 
 	std::ifstream f("./younes/www/html/index.html");
@@ -81,21 +110,44 @@ void run_server(int listen_fd)
 
 	while (1)
 	{
-		int ret = poll(fds,nb_of_fds,2000);
+		//std::cout << "before poll: "  << std::endl;
+		//print_struct(fds,5);
+		//std::cout << "-----------------" << std::endl;
+		int ret = poll(fds,5,0);
+		//std::cout << "after poll: "  << std::endl;
+		//print_struct(fds,5);
+		//std::cout << "-----------------" << std::endl;
 		if (ret == -1)
 		{
 			perror("webserv(poll)");
 			return ;
 		}
-		else if (!ret)
-			continue;
 		else
 		{
 			for (int i = 0; i < nb_of_fds;i++)
 			{
-				if (fds[i].revents & POLLIN)
+				//std::cout << ret << std::endl;
+				if (fds[i].revents & POLLERR || fds[i].revents & POLLHUP)
 				{
-					//std::cout << "pollin" << std::endl;
+					if (fds[i].revents & POLLERR)
+					{
+						std::cout << "hey POLLERR: ";
+						if (fds[i].revents & POLLNVAL)
+						{
+							delete_fd(&fds,i, &nb_of_fds);
+							std::cout << "POLLNVAL"<< std::endl;
+						}
+					}
+					else if (fds[i].revents & POLLHUP)
+					{
+						delete_fd(&fds,i, &nb_of_fds);
+						std::cout << "hey POLLHUP: " << std::endl;
+					}
+				}
+				else if (fds[i].revents & POLLIN)
+				{
+					if (fds[i].fd == listen_fd)
+					{
 						socklen_t addr_size = sizeof communication;
 						int fd_client = accept(listen_fd,&communication,&addr_size);
 						if (fd_client == -1)
@@ -103,18 +155,39 @@ void run_server(int listen_fd)
 							perror("webserv(accept)");
 							return ;
 						}
-
-
-						char buf[1000011];
-						ssize_t s = recv(fd_client,buf,1000000,0);
-						buf[s] = 0;
-
-						// add the client fd to struct
+						if (fcntl(fd_client,F_SETFD,O_NONBLOCK) == -1)
+						{
+							perror("webserv(fcntl)");
+							return ;
+						}
 						fds[nb_of_fds].fd = fd_client;
-						fds[nb_of_fds].events = POLLOUT;
+						fds[nb_of_fds].events = POLLIN;
 						nb_of_fds++;
+					}
+					else
+					{
+						char buf[1000011];
+						ssize_t s = recv(fds[i].fd,buf,1000000,0);
+						if (s != -1)
+
+							buf[s] = 0;
+						//if (s == -1)
+						//{
+						//	perror("webserv(recv)");
+						//	delete_fd(fds,i,&nb_of_fds);
+						//	continue ;
+						//}
+						//else if (s == 0)
+						//{
+						//	perror("webserv(recv)");
+						//	delete_fd(fds,i,&nb_of_fds);
+						//	continue ;
+						//}
+						fds[i].events = POLLOUT;
+					}
 				}
-				if (fds[i].revents & POLLOUT)
+				//	delete_fd(fds,i,&nb_of_fds);
+				else if (fds[i].revents & POLLOUT)
 				{
 
 					if (send(fds[i].fd,msg.c_str(),msg.length(),MSG_OOB) == -1)
@@ -122,18 +195,8 @@ void run_server(int listen_fd)
 						perror("webserv(send)");
 						return ;
 					}
-
-					close(fds[i].fd);
-					for (int j = i;j < nb_of_fds - 1;j++)
-					{
-						fds[j].fd =  fds[j + 1].fd;
-						fds[j].events =  fds[j + 1].events;
-						fds[j].revents =  fds[j + 1].revents;
-					}
-					fds[nb_of_fds -1].revents = 0;
-					fds[nb_of_fds -1].fd = 0;
-					fds[nb_of_fds -1].events = 0;
-					nb_of_fds--;
+					delete_fd(fds,i,&nb_of_fds);
+					std::cout << "send" << std::endl;
 				}
 
 			}

@@ -74,21 +74,29 @@ void Data::run_server()
 	msg += "Content-Length:" + std::to_string(body.length()) + "\r\n";
 	msg += "\r\n";
 	msg += body;
+	int a = 0;
 	while (1)
 	{
-		int ret = poll(this->poll_fd,this->nb_clients,0);
+		//std::cout << "number of requests :"  << a  << " and open fds are : " << this->get_number_of_clients() << std::endl;
+		std::cout << "hey" << std::endl;
+		int ret = poll(this->poll_fd,this->nb_clients,-1);
+		this->get_number_of_clients();
+		std::cout << "---------------" << std::endl;
 		if (ret == -1)
 		{
 			std::perror("webserv(poll)");
 			return ;
 		}
-		else if (!ret)
-			continue ;
 		for (int i = 0; i < this->nb_clients; i++)
 		{
+			if (this->poll_fd[i].revents == 0)
+			{
+				std::cout << "i = " <<  i  << "  |  nb_clients = " << this->nb_clients << std::endl;
+				continue;
+			}
 			if (this->poll_fd[i].revents & POLLIN)
 			{
-
+				//std::cout << "recv" << std::endl;
 				socklen_t addr_size = sizeof client_struct;
 				int client_fd = accept(this->poll_fd[i].fd, &client_struct,&addr_size);
 				if (client_fd < 0)
@@ -105,10 +113,10 @@ void Data::run_server()
 				this->poll_fd[nb_clients].fd = client_fd;
 				this->poll_fd[nb_clients].events = POLLOUT;
 				nb_clients++;
-				std::cout << "recv" << std::endl;
 			}
 			else if (this->poll_fd[i].revents & POLLOUT)
 			{
+				//std::cout << "send" << std::endl;
 				if (send(this->poll_fd[i].fd,msg.c_str(),msg.length(),0) == -1)
 				{
 					perror("webserv(send)");
@@ -125,8 +133,21 @@ void Data::run_server()
 				this->poll_fd[this->nb_clients -1].events = 0;
 				this->poll_fd[this->nb_clients -1].revents = 0;
 				nb_clients--;
-				std::cout << "send" << std::endl;
+				//std::cout << "send" << std::endl;
+				a++;
 			}
 		}
 	}
+}
+
+int Data::get_number_of_clients()
+{
+	int i = 0;
+	while (i < 10)
+	{
+
+		std::cout << "fd[" <<  i << "] :"<<  this->poll_fd[i].fd  << " " << this->poll_fd[i].revents << std::endl;
+		i++;
+	}
+	return (i);
 }

@@ -28,7 +28,7 @@ Connection::Connection(Server &server,int port): server(server)
 		perror("webserv(fcntl)");
 	}
 
-	if (listen(listen_fd,128) == -1)
+	if (listen(listen_fd,255) == -1)
 	{
 		perror("webserv(listen)");
 	}
