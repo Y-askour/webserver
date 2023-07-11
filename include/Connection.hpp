@@ -14,5 +14,5 @@ class Connection
 		Connection(Server &server,int port);
 		~Connection();
 		int get_fd();
-		void get_something_from_server();
+		Server &get_server();
 };

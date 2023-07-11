@@ -44,9 +44,7 @@ int Connection::get_fd()
 	return this->fd;
 }
 
-void Connection::get_something_from_server()
+Server &Connection::get_server()
 {
-	std::cout << this->server.get_root() << std::endl;
-	std::cout << "-------" << std::endl;
+	return this->server;
 }
-

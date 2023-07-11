@@ -1,5 +1,6 @@
 #include "../include/Data.hpp"
 #include <cstdio>
+#include <sys/_types/_size_t.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
 
@@ -51,15 +52,19 @@ void Data::create_listen_sockets()
 void Data::run_server()
 {
 	struct sockaddr client_struct;
-	this->nb_clients =0;
+	struct pollfd assign_poll;
+
+
 	std::vector<Connection>::iterator it = this->connections.begin();
 	while (it != this->connections.end())
 	{
-		this->poll_fd[nb_clients].fd = (*it).get_fd();
-		this->poll_fd[nb_clients].events = POLLIN;
-		nb_clients++;
+		assign_poll.fd = (*it).get_fd();
+		assign_poll.events = POLLIN;
+		this->test.push_back(assign_poll);
 		it++;
 	}
+
+	// test response /////////////////////////////
 
 	std::ifstream f("./younes/www/html/index.html");
 	std::string body = "<html>  <body> <h1>test<h1> </body> </html>\r\n";
@@ -74,67 +79,72 @@ void Data::run_server()
 	msg += "Content-Length:" + std::to_string(body.length()) + "\r\n";
 	msg += "\r\n";
 	msg += body;
-	int a = 0;
+	///////////////////////////////
+
 	while (1)
 	{
-		//std::cout << "number of requests :"  << a  << " and open fds are : " << this->get_number_of_clients() << std::endl;
-		std::cout << "hey" << std::endl;
-		int ret = poll(this->poll_fd,this->nb_clients,-1);
-		this->get_number_of_clients();
-		std::cout << "---------------" << std::endl;
+		int ret = poll(&this->test[0],this->test.size(),1000);
 		if (ret == -1)
 		{
 			std::perror("webserv(poll)");
 			return ;
 		}
-		for (int i = 0; i < this->nb_clients; i++)
+		for (size_t i = 0; i < this->test.size(); i++)
 		{
-			if (this->poll_fd[i].revents == 0)
+			if (this->test[i].revents  & POLLHUP)
 			{
-				std::cout << "i = " <<  i  << "  |  nb_clients = " << this->nb_clients << std::endl;
-				continue;
+				close(this->test[i].fd);
+				this->test.erase(this->test.begin() + i);
 			}
-			if (this->poll_fd[i].revents & POLLIN)
+			else if (this->test[i].revents & POLLIN)
 			{
-				//std::cout << "recv" << std::endl;
-				socklen_t addr_size = sizeof client_struct;
-				int client_fd = accept(this->poll_fd[i].fd, &client_struct,&addr_size);
-				if (client_fd < 0)
+				if (i == 0)
 				{
-					perror("webserv(accept)");
-					return ;
+					socklen_t addr_size = sizeof client_struct;
+					int client_fd = accept(this->test[i].fd, &client_struct,&addr_size);
+					Request *req = new Request(*this->get_connection_by_fd(this->test[i].fd),client_fd);
+					this->req_res.push_back(*req);
+					delete req;
+
+					if (client_fd < 0)
+					{
+						perror("webserv(accept)");
+						return ;
+					}
+					assign_poll.fd = client_fd;
+					assign_poll.events = POLLIN;
+					this->test.push_back(assign_poll);
+					std::cout << "new request " << std::endl;
 				}
-				char buf[1000011];
-				ssize_t s = recv(client_fd,buf,1000000,0);
-				buf[s] = 0;
+				else 
+				{
+					// i need to make this part work with the Request class
+					//Request *c = this->get_request_by_fd(this->test[i].fd);
+					//std::cout << c->get_server().get_root() << std::endl;
 
-
-				// add the client fd to the list
-				this->poll_fd[nb_clients].fd = client_fd;
-				this->poll_fd[nb_clients].events = POLLOUT;
-				nb_clients++;
+					char buf[1000011];
+					ssize_t s = recv(this->test[i].fd,buf,1000000,0);
+					buf[s] = 0;
+					this->test[i].events = POLLOUT;
+					std::cout << "recv" << std::endl;
+				}
 			}
-			else if (this->poll_fd[i].revents & POLLOUT)
+			else if (this->test[i].revents & POLLOUT)
 			{
-				//std::cout << "send" << std::endl;
-				if (send(this->poll_fd[i].fd,msg.c_str(),msg.length(),0) == -1)
+				// i need to make this part work with the Request class
+
+				if (send(this->test[i].fd,msg.c_str(),msg.length(),0) == -1)
 				{
 					perror("webserv(send)");
 					return ;
 				}
-				close(this->poll_fd[i].fd);
-				for (int j = i; j < this->nb_clients -1;j++)
-				{
-					this->poll_fd[j].fd = this->poll_fd[j + 1].fd;
-					this->poll_fd[j].events = this->poll_fd[j + 1].events;
-					this->poll_fd[j + 1].revents = this->poll_fd[j + 1].revents;
-				}
-				this->poll_fd[this->nb_clients -1].fd = 0;
-				this->poll_fd[this->nb_clients -1].events = 0;
-				this->poll_fd[this->nb_clients -1].revents = 0;
-				nb_clients--;
-				//std::cout << "send" << std::endl;
-				a++;
+				close(this->test[i].fd);
+
+				this->delete_request(this->test[i].fd);
+
+				this->test.erase(this->test.begin() + i);
+
+				std::cout << "send " << std::endl;
 			}
 		}
 	}
@@ -146,8 +156,52 @@ int Data::get_number_of_clients()
 	while (i < 10)
 	{
 
-		std::cout << "fd[" <<  i << "] :"<<  this->poll_fd[i].fd  << " " << this->poll_fd[i].revents << std::endl;
+		std::cout << "fd[" <<  i << "] :"<<  this->test[i].fd  << " " << this->test[i].revents << std::endl;
 		i++;
 	}
 	return (i);
+}
+
+Server *Data::get_server_by_fd(int fd)
+{
+	size_t i = 0;
+	while (i < this->connections.size())
+	{
+		if (this->connections[i].get_fd() == fd)
+			return &this->connections[i].get_server();
+		i++;
+	}
+	return NULL;
+}
+
+Connection *Data::get_connection_by_fd(int fd)
+{
+	for (size_t i  = 0 ; i < this->connections.size(); i++)
+	{
+		std::cout << this->connections[i].get_fd() << std::endl;
+		if (this->connections[i].get_fd() == fd)
+			return &(this->connections[i]);
+	}
+	return 0;
+}
+
+Request *Data::get_request_by_fd(int fd)
+{
+	for (size_t i = 0 ; i < this->req_res.size(); i++)
+	{
+		if (this->req_res[i].get_fd() == fd)
+			return &(this->req_res[i]);
+	}
+	return 0;
+}
+void Data::delete_request(int fd)
+{
+	for (size_t i = 0; i < this->req_res.size(); i++)
+	{
+		if (this->req_res[i].get_fd() == fd)
+		{
+			this->req_res.erase(this->req_res.begin() + i);
+		}
+	}
+	return ;
 }
