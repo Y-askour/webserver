@@ -98,7 +98,7 @@ void Data::run_server()
 			}
 			else if (this->test[i].revents & POLLIN)
 			{
-				if (i == 0)
+				if (this->is_a_connection(this->test[i].fd))
 				{
 					socklen_t addr_size = sizeof client_struct;
 					int client_fd = accept(this->test[i].fd, &client_struct,&addr_size);
@@ -204,4 +204,14 @@ void Data::delete_request(int fd)
 		}
 	}
 	return ;
+}
+
+bool Data::is_a_connection(int fd)
+{
+	for (size_t i = 0; i < this->connections.size(); i++)
+	{
+		if (this->connections[i].get_fd() == fd)
+			return (1);
+	}
+	return 0;
 }

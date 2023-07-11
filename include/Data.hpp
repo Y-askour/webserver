@@ -52,4 +52,5 @@ class Data
 		Connection *get_connection_by_fd(int fd);
 		Request *get_request_by_fd(int fd);
 		void delete_request(int fd);
+		bool is_a_connection(int fd);
 };
