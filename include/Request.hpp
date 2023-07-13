@@ -30,4 +30,5 @@ class Request
 		void remove_spaces(std::string &t);
 		int is_req_well_formed();
 		void split_request_line();
+		int check_uri_characters();
 };

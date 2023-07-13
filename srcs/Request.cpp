@@ -70,7 +70,7 @@ void Request::split_by_rclt()
 		strs[i].erase(0,pos + 1);
 		this->remove_spaces(strs[i]);
 		header.second = strs[i];
-		//std::cout << header.first << ":" << header.second << std::endl;
+		this->headers.insert(header);
 		i++;
 	}
 }
@@ -101,9 +101,35 @@ void Request::remove_spaces(std::string &t)
 int Request::is_req_well_formed()
 {
 	std::map<std::string, std::string>::iterator it = this->headers.find("Transfer-Encoding");
-	if (it != this->headers.end())
-		std::cout << it->second << std::endl;
+	std::map<std::string, std::string>::iterator it1 = this->headers.find("Content-Length");
+
+	if (it != this->headers.end() && it->second.compare("chuncked"))
+		return (501);
+	else if (it == this->headers.end()  && it1 == this->headers.end() && !this->method.compare("POST"))
+		return (400);
+	else if (!this->check_uri_characters())
+		return (400);
+	else if (this->uri.size() > 2048)
+		return (414);
+	else if (this->body.size() > (size_t)std::stoi(this->server->get_client_max_body_size()))
+		return (413);
+	std::cout << this->body << std::endl;
 	return (0);
+}
+
+int Request::check_uri_characters()
+{
+	std::string allowed_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=%";
+	//allowed_chars = "u";
+	std::string::iterator it = this->uri.begin();
+	it++;
+	while (it != this->uri.end())
+	{
+		if (allowed_chars.find(*it) == allowed_chars.npos)
+			return (0);
+		it++;
+	}
+	return (1);
 }
 
 void Request::split_request_line()
