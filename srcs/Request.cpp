@@ -1,4 +1,5 @@
 #include "../include/Request.hpp"
+#include <string>
 
 Request::Request(Connection &other,int fd)
 {
@@ -97,3 +98,41 @@ void Request::remove_spaces(std::string &t)
 	t.erase(i + 1,t.end());
 }
 
+int Request::is_req_well_formed()
+{
+	std::map<std::string, std::string>::iterator it = this->headers.find("Transfer-Encoding");
+	if (it != this->headers.end())
+		std::cout << it->second << std::endl;
+	return (0);
+}
+
+void Request::split_request_line()
+{
+	// removes spaces
+	this->remove_spaces(this->request_line);
+
+	std::string tmp = this->request_line;
+	size_t i = 0;
+
+	std::string strs[3];
+	int k = 0;
+
+	// split the request line parts
+	while (i < tmp.size())
+	{
+		if (std::isspace(tmp[i]))
+		{
+			strs[k] = tmp.substr(0,i);
+			tmp.erase(0,i + 1);
+			i = 0;
+			k++;
+			continue;
+		}
+		i++;
+	}
+	strs[k] = tmp;
+
+	this->method = strs[0];
+	this->uri = strs[1];
+	this->http_version = strs[2];
+}
