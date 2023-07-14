@@ -19,6 +19,9 @@ std::vector<std::pair<Parsing::t_tokens, std::string> >::iterator	Parsing::get_e
 
 void	Parsing::check_wish_directive(int check, std::vector<std::string> data)
 {
+	std::vector<Server *>::iterator server = this->servers.end() - 1;
+	std::map<std::string, Location *>::iterator loc =  (*server)->get_location().find(this->hld_location_name);
+
 	typedef void(Default_serv::*func)(std::vector<std::string>);
 	func serv_func[] = {&Default_serv::set_listen, &Default_serv::set_host, \
 		&Default_serv::set_server_name, &Default_serv::set_status_page, \
@@ -32,7 +35,8 @@ void	Parsing::check_wish_directive(int check, std::vector<std::string> data)
 			if (!check)
 				((*(this->servers.end() - 1))->*serv_func[i])(data);
 			else
-				(*(std::prev((*(this->servers.end() - 1))->get_location().end()))->second.*serv_func[i])(data);
+			 ((*loc->second).*serv_func[i])(data);
+				//(*(std::prev((*(this->servers.end() - 1))->get_location().end()))->second.*serv_func[i])(data);
 			return ;
 		}
 	}
@@ -52,6 +56,7 @@ void	Parsing::parse_location(void)
 	unsigned long	size_location;
 	Location	*location = new Location();
 	std::vector<std::pair<t_tokens, std::string> >::iterator	iter;
+	this->hld_location_name = (this->begin + 1)->second;
 	std::pair<std::string, Location*> hold((this->begin + 1)->second, location);
 	this->servers_itr = std::prev(this->get_servers().end());
 

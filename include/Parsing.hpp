@@ -32,6 +32,9 @@ class	Parsing : public Data
 	//holds tokens of tokenizer to push in token
 	std::pair<t_tokens, std::string> hold;
 
+	//string hold name of a location
+	std::string hld_location_name;
+
 	public :
 	//here i should add copy constructer and shiit
 		Parsing(void);
