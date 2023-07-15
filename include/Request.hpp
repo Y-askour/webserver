@@ -23,6 +23,7 @@ class Request
 
 	// response
 	std::string response;
+
 	std::string status;
 
 	std::string status_line;
@@ -58,5 +59,8 @@ class Request
 		void fill_body(Default_serv *serv,int status);
 		std::string get_response_body();
 		void fill_status_line();
-		void fill_headers();
+		void fill_headers(std::string location);
+
+		// methods
+		void GET_METHOD(Default_serv *serv);
 };

@@ -116,6 +116,8 @@ std::string Request::is_req_well_formed()
 		return ("414");
 	else if (this->body.size() > (size_t)std::stoi(this->server->get_client_max_body_size()))
 		return ("413");
+	else if (this->http_version.compare("HTTP/1.1"))
+			return ("505");
 	return ("");
 }
 
@@ -172,25 +174,46 @@ void Request::parssing_the_request(char *buf,size_t s)
 	this->split_by_rclt();
 	this->split_request_line();
 	status = this->is_req_well_formed();
-	std::cout << "|" << status <<  "|" << std::endl;
+	//std::cout << "|" << status <<  "|" << std::endl;
 	if (status.empty())
 	{
+		// i don't need status_location.first
 		std::pair<std::string,Default_serv*> status_location = this->get_matched_location_for_request();
 		std::pair<int,std::string> t = this->is_Location_have_redirection(status_location.second);
+
 		// no redirection
 		if (!t.first)
 		{
 			status = this->is_method_allowed_in_location(status_location.second);
 			if (status.empty())
 			{
+				//std::cout << this->method << std::endl;
+				status = "200";
+				this->fill_status_line();
+				this->fill_body(status_location.second,std::stoi(this->status));
+				this->fill_headers(t.second);
+				this->response = "";
+				this->response += this->status_line; 
+				this->response += this->response_headers;
+				this->response += "		<form method=\"post\"><input type=\"text\" name=\"vf\" /><input type=\"submit\" value=\"Submit\" /></form>";
+				if (this->method.compare("GET") == 0)
+					this->GET_METHOD(status_location.second);
+				else if (this->method.compare("DELETE") == 0)
+				{
+				}
+				else if (this->method.compare("POST") == 0)
+				{
+				}
+				else 
+				{
+				}
 				// check what method
 				return ;
 			}
 			// method is not allowed
-			status = t.first;
 			this->fill_status_line();
 			this->fill_body(status_location.second,std::stoi(this->status));
-			this->fill_headers();
+			this->fill_headers(t.second);
 			this->response = "";
 			this->response += this->status_line; 
 			this->response += this->response_headers;
@@ -198,10 +221,10 @@ void Request::parssing_the_request(char *buf,size_t s)
 			return ;
 		}
 		// there is a redirection
-		status = t.first;
+		this->status = std::to_string(t.first);
 		this->fill_status_line();
 		this->fill_body(status_location.second,std::stoi(this->status));
-		this->fill_headers();
+		this->fill_headers(t.second);
 		this->response = "";
 		this->response += this->status_line; 
 		this->response += this->response_headers;
@@ -210,25 +233,35 @@ void Request::parssing_the_request(char *buf,size_t s)
 	}
 	this->fill_status_line();
 	this->fill_body(this->server,std::stoi(this->status));
-	this->fill_headers();
+	this->fill_headers("");
 	this->response = "";
 	this->response += this->status_line; 
 	this->response += this->response_headers;
 	this->response += this->response_body + "\r\n";
-	std::cout << this->response << std::endl;
-
 }
+
+void Request::GET_METHOD(Default_serv *serv)
+{
+	std::string root = serv->get_root();
+	std::string path = root + this->uri;
+	std::cout << "------------------------" << std::endl;
+	std::cout << path << std::endl;
+}
+
 std::string Request::get_response_body()
 {
 	return this->response;
 }
 
-void Request::fill_headers()
+void Request::fill_headers(std::string location)
 {
 	// i need to check what type of content
 	this->response_headers += "Content-Type: text/html\r\n";
 	this->response_headers += "Content-Length: " + std::to_string(this->response_body.length()) + "\r\n";
+	if (!location.empty())
+		this->response_headers += "Location: " + location + "\r\n";
 	this->response_headers += "\r\n";
+
 }
 
 void Request::fill_status_line()
@@ -265,14 +298,17 @@ void Request::fill_status_line()
 		this->status_line += "Internal Server Error\r\n";
 	else if (status_code == 501)
 		this->status_line += "Not Implemented\r\n";
+	else if (status_code == 505)
+		this->status_line += "Not Implemented\r\n";
 }
 
 void Request::fill_body(Default_serv *serv,int status)
 {
-	if (status >=  400)
+	(void) serv;
+	if (status >=  300)
 	{
 		// getting the html and fill the body
-		std::vector<std::pair<int,std::string> > t = serv->get_status_page();
+		std::vector<std::pair<int,std::string> > t = this->server->get_status_page();
 		size_t i = 0;
 		for (; i < t.size();i++)
 		{
@@ -286,6 +322,10 @@ void Request::fill_body(Default_serv *serv,int status)
 			ss << f.rdbuf();
 			this->response_body = ss.str();
 		}
+	}
+	else 
+	{
+		//std::cout << this->uri << std::endl;
 	}
 }
 

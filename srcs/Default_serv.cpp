@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/16 19:10:28 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/14 18:59:23 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/15 14:37:59 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,12 +20,15 @@ Default_serv::Default_serv(void)
 	this->index.push_back("index.html");
 	this->server_name.push_back("localhost");
 
+	//200
 	this->status_page.push_back(std::make_pair(200, "status_page/200.html"));
 	this->status_page.push_back(std::make_pair(201, "status_page/201.html"));
 	this->status_page.push_back(std::make_pair(204, "status_page/204.html"));
 
+	// 300
 	this->status_page.push_back(std::make_pair(301, "status_page/301.html"));
 
+	// 400
 	this->status_page.push_back(std::make_pair(400, "status_page/400.html"));
 	this->status_page.push_back(std::make_pair(404, "status_page/404.html"));
 	this->status_page.push_back(std::make_pair(405, "status_page/405.html"));
@@ -33,8 +36,11 @@ Default_serv::Default_serv(void)
 	this->status_page.push_back(std::make_pair(413, "status_page/413.html"));
 	this->status_page.push_back(std::make_pair(414, "status_page/414.html"));
 
+	// 500
 	this->status_page.push_back(std::make_pair(500, "status_page/500.html"));
 	this->status_page.push_back(std::make_pair(501, "status_page/501.html"));
+	this->status_page.push_back(std::make_pair(505, "status_page/501.html"));
+
 	this->host = "127.0.0.1";
 	this->root = "var/www/";
 	this->client_max_body_size = "10000";
