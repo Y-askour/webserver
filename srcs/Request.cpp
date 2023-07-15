@@ -266,6 +266,7 @@ void Request::fill_status_line()
 	else if (status_code == 501)
 		this->status_line += "Not Implemented\r\n";
 }
+
 void Request::fill_body(Default_serv *serv,int status)
 {
 	if (status >=  400)

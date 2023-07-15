@@ -23,8 +23,6 @@ std::vector<Server*> &Data::get_servers(void)
 
 void	Data::parse_file_and_syntax_error(void)
 {
-	std::cout << "d" << std::endl;
-	std::cout << this->servers[0]->get_location().begin()->second->get_cgi_info()[0].first << std::endl;
 }
 
 Data::~Data()
@@ -83,18 +81,25 @@ void Data::run_server()
 
 	while (1)
 	{
+
+		//std::cout << "hey" << std::endl;
 		int ret = poll(&this->test[0],this->test.size(),1000);
+		//std::cout << "blan : "  << ret << std::endl;
+		
 		if (ret == -1)
 		{
 			std::perror("webserv(poll)");
 			return ;
 		}
-		for (size_t i = 0; i < this->test.size(); i++)
+		
+		size_t i = 0;
+		while(i < this->test.size())
 		{
 			if (this->test[i].revents  & POLLHUP)
 			{
 				close(this->test[i].fd);
 				this->test.erase(this->test.begin() + i);
+				i++;
 			}
 			else if (this->test[i].revents & POLLIN)
 			{
@@ -113,39 +118,48 @@ void Data::run_server()
 					}
 					assign_poll.fd = client_fd;
 					assign_poll.events = POLLIN;
+					this->test[i].revents = 0;
 					this->test.push_back(assign_poll);
-					std::cout << "new request " << std::endl;
 				}
 				else 
 				{
 					// i need to make this part work with the Request class
 					//Request *c = this->get_request_by_fd(this->test[i].fd);
 					//std::cout << c->get_server().get_root() << std::endl;
+					Request *younes = this->get_request_by_fd(this->test[i].fd);
 
-					char buf[1000011];
+					char buf[10000];
 					ssize_t s = recv(this->test[i].fd,buf,1000000,0);
+					if (!s)
+					{
+						close(this->test[i].fd);
+						this->delete_request(this->test[i].fd);
+						this->test.erase(this->test.begin() + i);
+						continue;
+					}
 					buf[s] = 0;
+					//std::cout << buf << std::endl;
+
+					younes->parssing_the_request(buf,s);
 					this->test[i].events = POLLOUT;
-					std::cout << "recv" << std::endl;
 				}
 			}
 			else if (this->test[i].revents & POLLOUT)
 			{
+				Request *younes = this->get_request_by_fd(this->test[i].fd);
 				// i need to make this part work with the Request class
 
-				if (send(this->test[i].fd,msg.c_str(),msg.length(),0) == -1)
+				if (send(this->test[i].fd,younes->get_response_body().c_str(),younes->get_response_body().length(),0) == -1)
 				{
 					perror("webserv(send)");
 					return ;
 				}
 				close(this->test[i].fd);
-
 				this->delete_request(this->test[i].fd);
-
 				this->test.erase(this->test.begin() + i);
-
-				std::cout << "send " << std::endl;
+				continue;
 			}
+			i++;
 		}
 	}
 }
@@ -178,7 +192,6 @@ Connection *Data::get_connection_by_fd(int fd)
 {
 	for (size_t i  = 0 ; i < this->connections.size(); i++)
 	{
-		std::cout << this->connections[i].get_fd() << std::endl;
 		if (this->connections[i].get_fd() == fd)
 			return &(this->connections[i]);
 	}
