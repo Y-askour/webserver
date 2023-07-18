@@ -1,13 +1,28 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Request.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/07/18 14:00:07 by yaskour           #+#    #+#             */
+/*   Updated: 2023/07/18 20:07:14 by yaskour          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Request.hpp"
+#include <cctype>
 #include <fstream>
+#include <ostream>
 #include <sstream>
 #include <string>
+#include <sys/unistd.h>
 #include <vector>
 
-Request::Request(Connection &other,int fd)
-{
-	this->server = &(other.get_server());
+Request::Request(Connection &other,int fd,std::map<std::string,std::string> mime)
+{ this->server = &(other.get_server());
 	this->fd = fd;
+	this->mime_types = mime;
 }
 
 Request::~Request()
@@ -163,6 +178,7 @@ void Request::split_request_line()
 	strs[k] = tmp;
 
 	this->method = strs[0];
+	this->request_uri = strs[1];
 	this->uri = strs[1];
 	this->http_version = strs[2];
 }
@@ -177,27 +193,30 @@ void Request::parssing_the_request(char *buf,size_t s)
 	//std::cout << "|" << status <<  "|" << std::endl;
 	if (status.empty())
 	{
+		Default_serv *location;
 		// i don't need status_location.first
-		std::pair<std::string,Default_serv*> status_location = this->get_matched_location_for_request();
-		std::pair<int,std::string> t = this->is_Location_have_redirection(status_location.second);
+		std::pair<Server *,Default_serv*> status_location = this->get_matched_location_for_request();
+		std::pair<int,std::string> t;
 
+		if (status_location.second)
+		{
+			t = this->is_Location_have_redirection(status_location.second);
+			location = status_location.second;
+		}
+		else 
+		{
+			t = this->is_Location_have_redirection(status_location.first);
+			location = status_location.first;
+		}
 		// no redirection
 		if (!t.first)
 		{
-			status = this->is_method_allowed_in_location(status_location.second);
+			status = this->is_method_allowed_in_location(location);
 			if (status.empty())
 			{
 				//std::cout << this->method << std::endl;
-				status = "200";
-				this->fill_status_line();
-				this->fill_body(status_location.second,std::stoi(this->status));
-				this->fill_headers(t.second);
-				this->response = "";
-				this->response += this->status_line; 
-				this->response += this->response_headers;
-				this->response += "		<form method=\"post\"><input type=\"text\" name=\"vf\" /><input type=\"submit\" value=\"Submit\" /></form>";
 				if (this->method.compare("GET") == 0)
-					this->GET_METHOD(status_location.second);
+					this->GET_METHOD(status_location);
 				else if (this->method.compare("DELETE") == 0)
 				{
 				}
@@ -211,41 +230,168 @@ void Request::parssing_the_request(char *buf,size_t s)
 				return ;
 			}
 			// method is not allowed
-			this->fill_status_line();
-			this->fill_body(status_location.second,std::stoi(this->status));
-			this->fill_headers(t.second);
-			this->response = "";
-			this->response += this->status_line; 
-			this->response += this->response_headers;
-			this->response += this->response_body + "\r\n";
+			this->create_the_response();
 			return ;
 		}
 		// there is a redirection
 		this->status = std::to_string(t.first);
-		this->fill_status_line();
-		this->fill_body(status_location.second,std::stoi(this->status));
-		this->fill_headers(t.second);
-		this->response = "";
-		this->response += this->status_line; 
-		this->response += this->response_headers;
-		this->response += this->response_body + "\r\n";
+		this->create_the_response();
 		return ;
 	}
-	this->fill_status_line();
-	this->fill_body(this->server,std::stoi(this->status));
-	this->fill_headers("");
-	this->response = "";
-	this->response += this->status_line; 
-	this->response += this->response_headers;
-	this->response += this->response_body + "\r\n";
+	this->create_the_response();
 }
 
-void Request::GET_METHOD(Default_serv *serv)
+void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 {
-	std::string root = serv->get_root();
-	std::string path = root + this->uri;
-	std::cout << "------------------------" << std::endl;
-	std::cout << path << std::endl;
+	// get path and file_type
+	std::string root = serv.first->get_root();
+	std::string second_root = "";
+	Default_serv *location = serv.first;
+	if (serv.second)
+	{
+		second_root = serv.second->get_root();
+		location = serv.second;
+	}
+	if (!second_root.empty())
+	{
+		int ret = (root[root.size() -1] == '/');
+		if ( ret && (second_root[0] == '/')  )
+			root.erase(root.size() - 1);
+		else if ( !ret  && !(second_root[0] == '/')  )
+			root.push_back('/');
+	}
+
+	// path
+	std::string path = root + second_root;
+	if (path[path.size() -1] != '/' && this->uri.size())
+		path.push_back('/');
+
+	path += this->uri;
+	path = this->find_path(path);
+
+
+	int ret = access(path.c_str(),R_OK);
+	if (ret == -1)
+	{
+		this->status = "404";
+		this->create_the_response();
+	}
+	else 
+	{
+		struct stat buf;
+		if (!stat(path.c_str(),&buf))
+		{
+			std::cout << "this path :  " << path << " is  a : ";
+			// directory 
+			if (S_ISDIR(buf.st_mode))
+			{
+				if (this->request_uri[this->request_uri.size() - 1] == '/')
+				{
+					this->status = "200";
+					this->html_file = path;
+					this->create_the_response();
+				}
+				else 
+				{
+					// redirect with the path with / in end
+					this->status = "301";
+					this->request_uri += '/';
+					this->html_file = path;
+					this->response_headers += "Location: " + this->request_uri + "\r\n";
+					this->create_the_response();
+				}
+				std::cout << "directory" << std::endl;
+			}
+			else {
+				std::cout << "file" << std::endl;
+				std::vector<std::pair<std::string,std::string> > b = location->get_cgi_info();
+				std::vector<std::pair<std::string,std::string> >::iterator t = b.begin();
+				if (this->type_file.empty())
+					this->type_file = "text/plain";
+				std::cout << this->type_file << std::endl;
+
+				// if no cgi
+				if (t != b.end())
+				{
+				}
+				this->status = "200";
+				this->html_file = path;
+				this->create_the_response();
+
+				// file
+			}
+
+		}
+	}
+}
+
+//std::vector<std::string,std::string> Request::split_ext(std::string ext);
+std::vector<std::string>	Request::split_ext(std::string ext)
+{
+	std::vector<std::string> exts;
+	for (size_t i = 0; i < ext.size(); i++)
+	{
+		if (std::isspace(ext[i]))
+		{
+			std::string splited_ext = ext.substr(0,i);
+			ext.erase(0,i + 1);
+			exts.push_back(splited_ext);
+			i = 0;
+			continue;
+		}
+	}
+	return exts;
+}
+
+std::string Request::find_path(std::string path)
+{
+	size_t exetension = path.rfind('.');
+	if (exetension != path.npos)
+	{
+		std::string ext = path.substr(exetension + 1,path.npos);
+		this->type_of_file(ext,this->mime_types);
+		return path;
+	}
+	else 
+	{
+		std::map<std::string,std::string>::iterator it = this->mime_types.begin();
+		while (it != this->mime_types.end())
+		{
+			std::vector<std::string> exts = this->split_ext(it->second);
+			for (size_t i = 0; i < exts.size(); i++)
+			{
+				std::string path_ext = path + "." + exts[i];
+				if (!access(path_ext.c_str(),R_OK))
+				{
+					this->type_file = it->first;
+					return path_ext;
+				}
+			}
+			it++;
+		}
+	}
+	return path;
+}
+
+void Request::type_of_file(std::string ext,std::map<std::string,std::string> mime)
+{
+	std::map<std::string,std::string>::iterator it = mime.begin();
+
+	while (it != mime.end())
+	{
+		std::vector<std::string> exts = this->split_ext(it->second);
+		for (size_t i = 0; i < exts.size(); i++)
+		{
+			size_t pos;
+			if ((pos = exts[i].find(ext))!= exts[i].npos && ( exts[i].size() == ext.size() ) )
+			{
+				this->type_file = it->first;
+				return ;
+			}
+		}
+		it++;
+	}		
+	return ;
 }
 
 std::string Request::get_response_body()
@@ -253,13 +399,11 @@ std::string Request::get_response_body()
 	return this->response;
 }
 
-void Request::fill_headers(std::string location)
+void Request::fill_headers()
 {
 	// i need to check what type of content
-	this->response_headers += "Content-Type: text/html\r\n";
+	this->response_headers += "Content-Type: " + this->type_file + "\r\n";
 	this->response_headers += "Content-Length: " + std::to_string(this->response_body.length()) + "\r\n";
-	if (!location.empty())
-		this->response_headers += "Location: " + location + "\r\n";
 	this->response_headers += "\r\n";
 
 }
@@ -302,9 +446,8 @@ void Request::fill_status_line()
 		this->status_line += "Not Implemented\r\n";
 }
 
-void Request::fill_body(Default_serv *serv,int status)
+void Request::fill_body(int status)
 {
-	(void) serv;
 	if (status >=  300)
 	{
 		// getting the html and fill the body
@@ -325,26 +468,67 @@ void Request::fill_body(Default_serv *serv,int status)
 	}
 	else 
 	{
-		//std::cout << this->uri << std::endl;
+		std::ifstream f(this->html_file);
+		if (f.is_open())
+		{
+			std::ostringstream ss;
+			ss << f.rdbuf();
+			this->response_body = ss.str();
+		}
 	}
 }
 
-std::pair<std::string,Default_serv *> Request::get_matched_location_for_request()
+
+std::pair<Server *,Default_serv *> Request::get_matched_location_for_request()
 {
 	std::map<std::string, Location *> l = this->server->get_location();
-	std::pair<std::string,Default_serv *> status_location;
-	status_location.first = "/";
-	status_location.second = this->server;
-	std::map<std::string,Location *>::iterator re = l.find(this->uri);
 
+	std::map<std::string, Location *>::iterator it = l.begin();
+	while (it != l.end())
+	{
+		size_t yo = this->uri.find((*it).first,0);
+		if (yo == 0)
+			break;
+		it++;
+	}
+	std::map<std::string,Location *>::iterator re = it;
+
+	std::pair<Server *,Default_serv *> result;
+	result.first = this->server;
+	result.second = NULL;
 	// find the location
 	if (re != l.end())
 	{
-		status_location.first= re->first;
-		status_location.second = re->second;
-		return (status_location);
+		this->uri.erase(0,(*re).first.size());
+		int i = 0;
+		while (this->uri[i]  && (this->uri[i] == '/') )
+		{
+			this->uri.erase(i,1);
+		}
+
+		i = this->uri.size() - 1;
+		while (i >= 0 && this->uri[i] && (this->uri[i] == '/') )
+		{
+			this->uri.erase(i,1);
+			i = this->uri.size() - 1;
+		}
+		result.second = re->second;
+		return (result);
 	}
-	return (status_location);
+
+	int i = 0;
+	while (this->uri[i]  && (this->uri[i] == '/') )
+	{
+		this->uri.erase(i,1);
+	}
+
+	i = this->uri.size() - 1;
+	while (i >= 0 && this->uri[i] && (this->uri[i] == '/') )
+	{
+		this->uri.erase(i,1);
+		i = this->uri.size() - 1;
+	}
+	return (result);
 }
 
 std::pair<int,std::string> Request::is_Location_have_redirection(Default_serv * location)
@@ -373,8 +557,13 @@ std::string Request::is_method_allowed_in_location(Default_serv *location)
 }
 
 
-std::string Request::create_location()
+void Request::create_the_response()
 {
-	std::string root = this->server->get_root();
-	return (0);
+	this->fill_status_line();
+	this->fill_body(std::stoi(this->status));
+	this->fill_headers();
+	this->response = "";
+	this->response += this->status_line; 
+	this->response += this->response_headers;
+	this->response += this->response_body + "\r\n";
 }

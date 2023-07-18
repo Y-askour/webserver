@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/16 19:10:28 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/15 14:37:59 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/18 20:09:50 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -170,12 +170,6 @@ void	Default_serv::set_host(std::vector<std::string> data)
 void	Default_serv::set_root(std::vector<std::string> data)
 {
 	this->root = data[0];
-	DIR *dir;
-
-	if (!(dir = opendir(this->root.c_str())))
-		throw ("Error: root directory not exists.");
-  closedir(dir);
-	//maybe here keep the dir fd to use it in the execution
 }
 
 void	Default_serv::set_client_max_body_size(std::vector<std::string> data)

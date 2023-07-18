@@ -107,9 +107,8 @@ void Data::run_server()
 				{
 					socklen_t addr_size = sizeof client_struct;
 					int client_fd = accept(this->test[i].fd, &client_struct,&addr_size);
-					Request *req = new Request(*this->get_connection_by_fd(this->test[i].fd),client_fd);
-					this->req_res.push_back(*req);
-					delete req;
+					Request req(*this->get_connection_by_fd(this->test[i].fd),client_fd,this->mime_types_parse);
+					this->req_res.push_back(req);
 
 					if (client_fd < 0)
 					{
