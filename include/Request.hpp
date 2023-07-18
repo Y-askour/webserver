@@ -39,6 +39,8 @@ class Request
 	std::string html_file;
 	std::string type_file;
 
+
+
 	std::map<std::string,std::string> mime_types;
 	public:
 		Request(Connection& connection,int fd,std::map<std::string,std::string> mime);
@@ -79,4 +81,5 @@ class Request
 		void type_of_file(std::string path,std::map<std::string,std::string> mime);
 		std::string find_path(std::string path);
 		std::vector<std::string>	split_ext(std::string ext);
+		void create_auto_index();
 };

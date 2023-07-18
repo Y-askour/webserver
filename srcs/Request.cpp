@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/18 14:00:07 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/18 20:07:14 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/18 22:11:46 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <cctype>
 #include <fstream>
 #include <ostream>
+#include <shared_mutex>
 #include <sstream>
 #include <string>
 #include <sys/unistd.h>
@@ -287,9 +288,42 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 			{
 				if (this->request_uri[this->request_uri.size() - 1] == '/')
 				{
-					this->status = "200";
-					this->html_file = path;
-					this->create_the_response();
+					std::vector<std::string> indexs = serv.first->get_index();
+
+					// there is indexs
+					if (indexs.size() > 0)
+					{
+					}
+					else
+					{
+						// get autoindex
+						this->html_file = path;
+						int check;
+						if (serv.second)
+							check = serv.second->get_autoindex();
+						else 
+							check = serv.first->get_autoindex();
+						if (check)
+						{
+							this->type_file = "text/html";
+							this->create_auto_index();
+							this->status = "200";
+							this->fill_status_line();
+							this->fill_headers();
+
+							this->response = "";
+							this->response += this->status_line; 
+							this->response += this->response_headers;
+							this->response += this->response_body + "\r\n";
+						}
+						else
+						{
+							this->status = "403";
+							this->html_file = path;
+							this->create_the_response();
+						}
+
+					}
 				}
 				else 
 				{
@@ -323,6 +357,31 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 
 		}
 	}
+}
+
+void Request::create_auto_index()
+{
+	//std::cout <<  this->html_file << std::endl;
+	std::string auto_index = "<html><head><title>index</title></head><body><ul>";
+
+
+	DIR *index = opendir(this->html_file.c_str());
+	if (!index)
+	{
+		perror("opendir");
+		return ;
+	}
+	struct dirent *entry;
+	while ((entry = readdir(index)))
+	{
+		auto_index += "<li><a href=\"";
+		auto_index.append(entry->d_name);
+		auto_index += "\">";
+		auto_index.append(entry->d_name);
+		auto_index += "</a>";
+	}
+	auto_index += "</ul></body></html>";
+	this->response_body = auto_index;
 }
 
 //std::vector<std::string,std::string> Request::split_ext(std::string ext);

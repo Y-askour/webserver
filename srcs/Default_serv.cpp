@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/16 19:10:28 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/18 20:09:50 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/18 20:51:11 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ Default_serv::Default_serv(void)
 {
 	//std::cout << "Defautl_serv constructer" << std::endl;
 	this->listen.push_back(8080);
-	this->index.push_back("index.html");
+	//this->index.push_back("index.html");
 	this->server_name.push_back("localhost");
 
 	//200
@@ -57,8 +57,8 @@ void	Default_serv::take_off_default_setup(void)
 {
 	if (this->listen.size() > 1)
 		this->listen.erase(this->listen.begin());
-	if (this->index.size() > 1)
-		this->index.erase(this->index.begin());
+	//if (this->index.size() > 1)
+	//	this->index.erase(this->index.begin());
 	if (this->server_name.size() > 1)
 		this->server_name.erase(this->server_name.begin());
 	if (this->allow_methods.size() > 1)
@@ -198,9 +198,9 @@ void	Default_serv::set_upload(int data)
 void	Default_serv::set_autoindex(std::vector<std::string> data)
 {
 	if (!data[0].compare("on"))
-		this->upload = 1;
+		this->autoindex = 1;
 	else if (!data[0].compare("off"))
-		this->upload = 0;
+		this->autoindex = 0;
 	else
 		throw ("Error: wrong syntax autoindex only takes on/off.");
 }
