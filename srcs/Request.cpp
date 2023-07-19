@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/18 14:00:07 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/19 11:36:47 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/19 13:53:26 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -293,9 +293,25 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 					// there is indexs
 					if (indexs.size() > 0)
 					{
+						// check if there is a cgi
+
+						std::vector<std::pair<std::string,std::string> > cgi = location->get_cgi_info();
+						if (cgi.size() > 0)
+						{
+							// run cgi
+							std::cout << path << std::endl;
+							this->html_file = "/Users/yaskour/lwt/www/index.py";
+							this->status = "201";
+							this->create_the_response();
+							return ;
+						}
+						// if there is not a cgi
 						for (size_t i = 0; i < indexs.size(); i++)
 						{
-							std::string index_path = path + indexs[i];
+							std::string index_path;
+							if (path[path.size() - 1] != '/')
+								index_path = path + '/';
+							index_path += indexs[i];
 							int ret = access(index_path.c_str(),R_OK);
 							if (!ret)
 							{
@@ -353,19 +369,14 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 				//std::cout << "file" << std::endl;
 				std::vector<std::pair<std::string,std::string> > b = location->get_cgi_info();
 				std::vector<std::pair<std::string,std::string> >::iterator t = b.begin();
-				if (this->type_file.empty())
-					this->type_file = "text/plain";
-				//std::cout << this->type_file << std::endl;
-
-				// if no cgi
 				if (t != b.end())
 				{
 				}
+				if (this->type_file.empty())
+					this->type_file = "text/plain";
 				this->status = "200";
 				this->html_file = path;
 				this->create_the_response();
-
-				// file
 			}
 
 		}
@@ -441,6 +452,19 @@ std::string Request::find_path(std::string path)
 				}
 			}
 			it++;
+		}
+		// check if it's python or php
+		std::string path_ext = path + ".py";
+		if (!access(path_ext.c_str(),R_OK))
+		{
+			this->type_file = "text/plain";
+			return path_ext;
+		}
+		path_ext = path + ".php";
+		if (!access(path_ext.c_str(),R_OK))
+		{
+			this->type_file = "text/plain";
+			return path_ext;
 		}
 	}
 	return path;
