@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/18 14:00:07 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/18 22:11:46 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/19 10:23:41 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -303,7 +303,7 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 							check = serv.second->get_autoindex();
 						else 
 							check = serv.first->get_autoindex();
-						if (check)
+						if (check == 1)
 						{
 							this->type_file = "text/html";
 							this->create_auto_index();

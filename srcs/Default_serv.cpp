@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/16 19:10:28 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/18 20:51:11 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/19 10:28:28 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@ Default_serv::Default_serv(void)
 	this->server_name.push_back("localhost");
 
 	//200
-	this->status_page.push_back(std::make_pair(200, "status_page/200.html"));
 	this->status_page.push_back(std::make_pair(201, "status_page/201.html"));
 	this->status_page.push_back(std::make_pair(204, "status_page/204.html"));
 
@@ -30,6 +29,7 @@ Default_serv::Default_serv(void)
 
 	// 400
 	this->status_page.push_back(std::make_pair(400, "status_page/400.html"));
+	this->status_page.push_back(std::make_pair(403, "status_page/403.html"));
 	this->status_page.push_back(std::make_pair(404, "status_page/404.html"));
 	this->status_page.push_back(std::make_pair(405, "status_page/405.html"));
 	this->status_page.push_back(std::make_pair(409, "status_page/409.html"));
