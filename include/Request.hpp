@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+
 #include <iostream>
 
 class Request
@@ -35,9 +36,10 @@ class Request
 	// 3mer hna awld nass
 	std::string response_headers;
 	std::string response_body;
-	//
+	// 
 
 	std::string query;
+	std::pair<std::string,std::string> cgi;
 
 
 	// file to to read
@@ -62,13 +64,15 @@ class Request
 		std::string get_method();
 		std::string get_query();
 		std::string get_file_root();
-		std::pair<std::string,std::string> get_cgi();
+
+		std::pair<std::string,std::string> get_cgi(); // first is the path of the script and the second is the extension of the script
 
 
 		// setters
 		void set_request_buf(char *buf);
 		void set_n_bytes(size_t n);
-
+		void set_response_body(std::string body);
+		void set_response_headers(std::string headers);
 		// helpers
 		void split_by_rclt();
 		void remove_spaces(std::string &t);
