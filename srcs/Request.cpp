@@ -6,7 +6,7 @@
 /*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 20:36:11 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/19 21:01:19 by amrakibe         ###   ########.fr       */
+/*   Updated: 2023/07/19 21:16:16 by amrakibe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -314,15 +314,16 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 							int ret = access(index_path.c_str(),R_OK);
 							if (!ret)
 							{
-								if ( (indexs[i].find(".py") || indexs[i].find(".php")) && (cgi.size() > 0) ) 
+								if ( ( (indexs[i].find(".py") != indexs[i].npos) || (indexs[i].find(".php") != indexs[i].npos )) && (cgi.size() > 0) ) 
 								{
 									std::string found_index = indexs[i];
 									for (size_t i = 0; i < cgi.size(); i++)
 									{
 										if (found_index.find(cgi[i].first) != found_index.npos)
 										{
-											std::cout << "amine zaml" << std::endl;
+											this->html_file = index_path;
 											this->cgi = cgi[i];
+											break;
 										}
 									}
 									this->html_file = index_path;
