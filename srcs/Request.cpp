@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/18 14:00:07 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/19 14:04:44 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/19 14:43:38 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,8 +180,11 @@ void Request::split_request_line()
 
 	this->method = strs[0];
 	size_t pos = strs[1].find("?");
-	this->query = strs[1].substr(pos + 1);
-	strs[1].erase(pos,strs[1].npos);
+	if (pos != strs[1].npos)
+	{
+		this->query = strs[1].substr(pos + 1);
+		strs[1].erase(pos,strs[1].npos);
+	}
 	this->request_uri = strs[1];
 	this->uri = strs[1];
 	this->http_version = strs[2];
@@ -270,8 +273,10 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 	if (path[path.size() -1] != '/' && this->uri.size())
 		path.push_back('/');
 
+	this->root_file = path;
 	path += this->uri;
 	path = this->find_path(path);
+	this->html_file = path;
 
 
 	int ret = access(path.c_str(),R_OK);
@@ -374,6 +379,7 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 				std::vector<std::pair<std::string,std::string> >::iterator t = b.begin();
 				if (t != b.end())
 				{
+					// cgi 
 				}
 				if (this->type_file.empty())
 					this->type_file = "text/plain";
@@ -667,3 +673,25 @@ void Request::create_the_response()
 	this->response += this->response_headers;
 	this->response += this->response_body + "\r\n";
 }
+
+
+std::string Request::get_file_path()
+{
+	return (this->html_file);
+}
+
+std::string Request::get_method()
+{
+	return (this->method);
+}
+
+std::string Request::get_query()
+{
+	return (this->query);
+}
+
+std::string Request::get_file_root()
+{
+	return (this->root_file);
+}
+

@@ -31,14 +31,20 @@ class Request
 
 	std::string uri;
 	std::string status_line;
+
+	// 3mer hna awld nass
 	std::string response_headers;
 	std::string response_body;
+	//
+
 	std::string query;
 
 
 	// file to to read
 	std::string html_file;
 	std::string type_file;
+
+	std::string root_file;
 
 
 
@@ -50,6 +56,14 @@ class Request
 		// getters
 		Server& get_server();
 		int get_fd();
+
+		// amin getters
+		std::string get_file_path();
+		std::string get_method();
+		std::string get_query();
+		std::string get_file_root();
+		std::pair<std::string,std::string> get_cgi();
+
 
 		// setters
 		void set_request_buf(char *buf);
