@@ -33,6 +33,7 @@ class Request
 	std::string status_line;
 	std::string response_headers;
 	std::string response_body;
+	std::string query;
 
 
 	// file to to read

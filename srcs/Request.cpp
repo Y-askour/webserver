@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/18 14:00:07 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/19 13:53:26 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/19 14:04:44 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,6 +179,9 @@ void Request::split_request_line()
 	strs[k] = tmp;
 
 	this->method = strs[0];
+	size_t pos = strs[1].find("?");
+	this->query = strs[1].substr(pos + 1);
+	strs[1].erase(pos,strs[1].npos);
 	this->request_uri = strs[1];
 	this->uri = strs[1];
 	this->http_version = strs[2];
