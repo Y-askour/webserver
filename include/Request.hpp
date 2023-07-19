@@ -91,10 +91,15 @@ class Request
 
 		// methods
 		void GET_METHOD(std::pair<Server *,Default_serv *>);
+		void POST_METHOD(std::pair<Server *,Default_serv *>);
 
 		// helpers
 		void type_of_file(std::string path,std::map<std::string,std::string> mime);
 		std::string find_path(std::string path);
 		std::vector<std::string>	split_ext(std::string ext);
 		void create_auto_index();
+		int location_support_upload(Default_serv *location);
+		std::string get_requested_resource(Default_serv *location);
+		std::string get_root_path(Default_serv *location);
+
 };

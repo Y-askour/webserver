@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/18 14:00:07 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/19 14:43:38 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/19 20:33:08 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,10 +224,9 @@ void Request::parssing_the_request(char *buf,size_t s)
 				//std::cout << this->method << std::endl;
 				if (this->method.compare("GET") == 0)
 					this->GET_METHOD(status_location);
-				else if (this->method.compare("DELETE") == 0)
-				{
-				}
 				else if (this->method.compare("POST") == 0)
+					this->POST_METHOD(status_location);
+				else if (this->method.compare("DELETE") == 0)
 				{
 				}
 				else 
@@ -247,7 +246,6 @@ void Request::parssing_the_request(char *buf,size_t s)
 	}
 	this->create_the_response();
 }
-
 void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 {
 	// get path and file_type
@@ -304,15 +302,6 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 						// check if there is a cgi
 
 						std::vector<std::pair<std::string,std::string> > cgi = location->get_cgi_info();
-						if (cgi.size() > 0)
-						{
-							// run cgi
-							std::cout << path << std::endl;
-							this->html_file = "/Users/yaskour/lwt/www/index.py";
-							this->status = "201";
-							this->create_the_response();
-							return ;
-						}
 						// if there is not a cgi
 						for (size_t i = 0; i < indexs.size(); i++)
 						{
@@ -323,6 +312,17 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 							int ret = access(index_path.c_str(),R_OK);
 							if (!ret)
 							{
+								if ( (indexs[i].find(".py") || indexs[i].find(".php")) && (cgi.size() > 0) ) 
+								{
+									this->html_file = index_path;
+									std::cout << "cgi" << std::endl;
+									// run cgi
+									//std::cout << path << std::endl;
+									//this->html_file = "/Users/yaskour/lwt/www/index.py";
+									//this->status = "201";
+									//this->create_the_response();
+									return ;
+								}
 								this->html_file = index_path;
 								this->type_file = "text/html";
 								this->status = "200";
@@ -330,6 +330,7 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 								return ;
 							}
 						}
+						// there is no index file
 						this->status = "403";
 						this->create_the_response();
 						return ;
@@ -379,6 +380,7 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 				std::vector<std::pair<std::string,std::string> >::iterator t = b.begin();
 				if (t != b.end())
 				{
+					std::cout << this->get_file_path() << std::endl;
 					// cgi 
 				}
 				if (this->type_file.empty())
@@ -391,6 +393,36 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 		}
 	}
 }
+
+int Request::location_support_upload(Default_serv *location)
+{
+	int check = location->get_upload();
+	return check;
+}
+
+void Request::POST_METHOD(std::pair<Server *,Default_serv *> serv)
+{
+	Default_serv *location;
+	if (serv.second)
+		location = serv.second;
+	else
+		location = serv.first;
+	if (this->location_support_upload(location) == 1)
+	{
+		// upload the post request body
+		std::cout << "on" << std::endl;
+		this->status = "404";
+		this->type_file = "text/html";
+		this->create_the_response();
+		return ;
+	}
+	std::cout << this->body << std::endl;
+	//this->get_requested_resource(location);
+}
+
+
+
+
 
 void Request::create_auto_index()
 {
@@ -653,6 +685,8 @@ std::string Request::is_method_allowed_in_location(Default_serv *location)
 {
 	std::vector<std::string>t = location->get_allow_methods();
 	std::vector<std::string>::iterator it = t.begin();
+	if (it == t.end())
+		return "";
 	while (it != t.end())
 	{
 		if (!it->compare(this->method))
