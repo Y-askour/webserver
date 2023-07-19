@@ -99,7 +99,7 @@ void Data::run_server()
 			{
 				close(this->test[i].fd);
 				this->test.erase(this->test.begin() + i);
-				i++;
+				continue;
 			}
 			else if (this->test[i].revents & POLLIN)
 			{
@@ -112,6 +112,7 @@ void Data::run_server()
 
 					if (client_fd < 0)
 					{
+						//while (1);
 						perror("webserv(accept)");
 						return ;
 					}

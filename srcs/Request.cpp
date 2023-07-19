@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/18 14:00:07 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/19 10:23:41 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/19 11:36:47 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -282,27 +282,40 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 		struct stat buf;
 		if (!stat(path.c_str(),&buf))
 		{
-			std::cout << "this path :  " << path << " is  a : ";
+			//std::cout << "this path :  " << path << " is  a : ";
 			// directory 
 			if (S_ISDIR(buf.st_mode))
 			{
 				if (this->request_uri[this->request_uri.size() - 1] == '/')
 				{
-					std::vector<std::string> indexs = serv.first->get_index();
+					std::vector<std::string> indexs = location->get_index();
 
 					// there is indexs
 					if (indexs.size() > 0)
 					{
+						for (size_t i = 0; i < indexs.size(); i++)
+						{
+							std::string index_path = path + indexs[i];
+							int ret = access(index_path.c_str(),R_OK);
+							if (!ret)
+							{
+								this->html_file = index_path;
+								this->type_file = "text/html";
+								this->status = "200";
+								this->create_the_response();
+								return ;
+							}
+						}
+						this->status = "403";
+						this->create_the_response();
+						return ;
 					}
 					else
 					{
 						// get autoindex
 						this->html_file = path;
 						int check;
-						if (serv.second)
-							check = serv.second->get_autoindex();
-						else 
-							check = serv.first->get_autoindex();
+						check = location->get_autoindex();
 						if (check == 1)
 						{
 							this->type_file = "text/html";
@@ -334,15 +347,15 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 					this->response_headers += "Location: " + this->request_uri + "\r\n";
 					this->create_the_response();
 				}
-				std::cout << "directory" << std::endl;
+				//std::cout << "directory" << std::endl;
 			}
 			else {
-				std::cout << "file" << std::endl;
+				//std::cout << "file" << std::endl;
 				std::vector<std::pair<std::string,std::string> > b = location->get_cgi_info();
 				std::vector<std::pair<std::string,std::string> >::iterator t = b.begin();
 				if (this->type_file.empty())
 					this->type_file = "text/plain";
-				std::cout << this->type_file << std::endl;
+				//std::cout << this->type_file << std::endl;
 
 				// if no cgi
 				if (t != b.end())
@@ -380,6 +393,7 @@ void Request::create_auto_index()
 		auto_index.append(entry->d_name);
 		auto_index += "</a>";
 	}
+	closedir(index);
 	auto_index += "</ul></body></html>";
 	this->response_body = auto_index;
 }
