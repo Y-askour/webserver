@@ -3,12 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/18 14:00:07 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/19 20:33:08 by yaskour          ###   ########.fr       */
+/*   Created: 2023/07/19 20:36:11 by amrakibe          #+#    #+#             */
+/*   Updated: 2023/07/19 21:01:19 by amrakibe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 #include "../include/Request.hpp"
 #include <cctype>
@@ -19,6 +20,7 @@
 #include <string>
 #include <sys/unistd.h>
 #include <vector>
+#include "../include/cgi.hpp"
 
 Request::Request(Connection &other,int fd,std::map<std::string,std::string> mime)
 { this->server = &(other.get_server());
@@ -300,7 +302,7 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 					if (indexs.size() > 0)
 					{
 						// check if there is a cgi
-
+						
 						std::vector<std::pair<std::string,std::string> > cgi = location->get_cgi_info();
 						// if there is not a cgi
 						for (size_t i = 0; i < indexs.size(); i++)
@@ -314,8 +316,18 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 							{
 								if ( (indexs[i].find(".py") || indexs[i].find(".php")) && (cgi.size() > 0) ) 
 								{
+									std::string found_index = indexs[i];
+									for (size_t i = 0; i < cgi.size(); i++)
+									{
+										if (found_index.find(cgi[i].first) != found_index.npos)
+										{
+											std::cout << "amine zaml" << std::endl;
+											this->cgi = cgi[i];
+										}
+									}
 									this->html_file = index_path;
-									std::cout << "cgi" << std::endl;
+									std::cout << this->cgi.first << "  " << this->get_file_path() << std::endl;
+									CGI aa(*this);
 									// run cgi
 									//std::cout << path << std::endl;
 									//this->html_file = "/Users/yaskour/lwt/www/index.py";
@@ -380,8 +392,7 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 				std::vector<std::pair<std::string,std::string> >::iterator t = b.begin();
 				if (t != b.end())
 				{
-					std::cout << this->get_file_path() << std::endl;
-					// cgi 
+						// cgi
 				}
 				if (this->type_file.empty())
 					this->type_file = "text/plain";
@@ -459,7 +470,7 @@ std::vector<std::string>	Request::split_ext(std::string ext)
 		if (std::isspace(ext[i]))
 		{
 			std::string splited_ext = ext.substr(0,i);
-			ext.erase(0,i + 1);
+			ext.erase(0, i + 1);
 			exts.push_back(splited_ext);
 			i = 0;
 			continue;
@@ -729,3 +740,17 @@ std::string Request::get_file_root()
 	return (this->root_file);
 }
 
+std::pair<std::string,std::string> Request::get_cgi()
+{
+	return (this->cgi);
+}
+
+void Request::set_response_body(std::string body)
+{
+	this->response_body = body;
+}
+
+void Request::set_response_headers(std::string headers)
+{   
+	this->response_headers = headers;
+}
