@@ -6,7 +6,7 @@
 /*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 20:36:11 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/19 21:16:16 by amrakibe         ###   ########.fr       */
+/*   Updated: 2023/07/19 21:18:13 by amrakibe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -326,8 +326,6 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 											break;
 										}
 									}
-									this->html_file = index_path;
-									std::cout << this->cgi.first << "  " << this->get_file_path() << std::endl;
 									CGI aa(*this);
 									// run cgi
 									//std::cout << path << std::endl;
