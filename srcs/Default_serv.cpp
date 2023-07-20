@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/16 19:10:28 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/14 18:59:23 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/19 10:28:28 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,24 +17,30 @@ Default_serv::Default_serv(void)
 {
 	//std::cout << "Defautl_serv constructer" << std::endl;
 	this->listen.push_back(8080);
-	this->index.push_back("index.html");
+	//this->index.push_back("index.html");
 	this->server_name.push_back("localhost");
 
-	this->status_page.push_back(std::make_pair(200, "status_page/200.html"));
+	//200
 	this->status_page.push_back(std::make_pair(201, "status_page/201.html"));
 	this->status_page.push_back(std::make_pair(204, "status_page/204.html"));
 
+	// 300
 	this->status_page.push_back(std::make_pair(301, "status_page/301.html"));
 
+	// 400
 	this->status_page.push_back(std::make_pair(400, "status_page/400.html"));
+	this->status_page.push_back(std::make_pair(403, "status_page/403.html"));
 	this->status_page.push_back(std::make_pair(404, "status_page/404.html"));
 	this->status_page.push_back(std::make_pair(405, "status_page/405.html"));
 	this->status_page.push_back(std::make_pair(409, "status_page/409.html"));
 	this->status_page.push_back(std::make_pair(413, "status_page/413.html"));
 	this->status_page.push_back(std::make_pair(414, "status_page/414.html"));
 
+	// 500
 	this->status_page.push_back(std::make_pair(500, "status_page/500.html"));
 	this->status_page.push_back(std::make_pair(501, "status_page/501.html"));
+	this->status_page.push_back(std::make_pair(505, "status_page/501.html"));
+
 	this->host = "127.0.0.1";
 	this->root = "var/www/";
 	this->client_max_body_size = "10000";
@@ -51,8 +57,8 @@ void	Default_serv::take_off_default_setup(void)
 {
 	if (this->listen.size() > 1)
 		this->listen.erase(this->listen.begin());
-	if (this->index.size() > 1)
-		this->index.erase(this->index.begin());
+	//if (this->index.size() > 1)
+	//	this->index.erase(this->index.begin());
 	if (this->server_name.size() > 1)
 		this->server_name.erase(this->server_name.begin());
 	if (this->allow_methods.size() > 1)
@@ -164,12 +170,6 @@ void	Default_serv::set_host(std::vector<std::string> data)
 void	Default_serv::set_root(std::vector<std::string> data)
 {
 	this->root = data[0];
-	DIR *dir;
-
-	if (!(dir = opendir(this->root.c_str())))
-		throw ("Error: root directory not exists.");
-  closedir(dir);
-	//maybe here keep the dir fd to use it in the execution
 }
 
 void	Default_serv::set_client_max_body_size(std::vector<std::string> data)
@@ -198,9 +198,9 @@ void	Default_serv::set_upload(int data)
 void	Default_serv::set_autoindex(std::vector<std::string> data)
 {
 	if (!data[0].compare("on"))
-		this->upload = 1;
+		this->autoindex = 1;
 	else if (!data[0].compare("off"))
-		this->upload = 0;
+		this->autoindex = 0;
 	else
 		throw ("Error: wrong syntax autoindex only takes on/off.");
 }

@@ -99,7 +99,7 @@ void Data::run_server()
 			{
 				close(this->test[i].fd);
 				this->test.erase(this->test.begin() + i);
-				i++;
+				continue;
 			}
 			else if (this->test[i].revents & POLLIN)
 			{
@@ -107,12 +107,12 @@ void Data::run_server()
 				{
 					socklen_t addr_size = sizeof client_struct;
 					int client_fd = accept(this->test[i].fd, &client_struct,&addr_size);
-					Request *req = new Request(*this->get_connection_by_fd(this->test[i].fd),client_fd);
-					this->req_res.push_back(*req);
-					delete req;
+					Request req(*this->get_connection_by_fd(this->test[i].fd),client_fd,this->mime_types_parse);
+					this->req_res.push_back(req);
 
 					if (client_fd < 0)
 					{
+						//while (1);
 						perror("webserv(accept)");
 						return ;
 					}

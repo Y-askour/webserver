@@ -51,13 +51,28 @@ void	Parsing::parse_directive(int check)
 	this->check_wish_directive(check, data);
 }
 
+void Parsing::delete_last_slash(std::string &str)
+{
+	size_t pos;
+	if (str.size() > 1)
+	{
+		while ((pos  = str.rfind('/')) != std::string::npos)
+		{
+			if (pos == 0)
+				break;
+			str.erase(pos,1);
+		}
+	}
+}
+
 void	Parsing::parse_location(void)
 {
 	unsigned long	size_location;
 	Location	*location = new Location();
 	std::vector<std::pair<t_tokens, std::string> >::iterator	iter;
 	this->hld_location_name = (this->begin + 1)->second;
-	std::pair<std::string, Location*> hold((this->begin + 1)->second, location);
+	this->delete_last_slash(this->hld_location_name);
+	std::pair<std::string, Location*> hold(this->hld_location_name, location);
 	this->servers_itr = std::prev(this->get_servers().end());
 
 	size_location = (*(this->servers.end() - 1))->get_location().size();

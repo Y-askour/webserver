@@ -76,5 +76,6 @@ class	Parsing : public Data
 		void	last_check_servers(void);
 		//this is for default server building
 		void	make_default_server(void);
+		void 	delete_last_slash(std::string &str);
 		~Parsing(void);
 };
