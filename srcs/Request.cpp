@@ -6,7 +6,7 @@
 /*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 20:36:11 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/20 13:17:24 by amrakibe         ###   ########.fr       */
+/*   Updated: 2023/07/20 17:17:40 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <sstream>
 #include <string>
 #include <sys/unistd.h>
+#include <unistd.h>
 #include <vector>
 #include "../include/cgi.hpp"
 
@@ -54,29 +55,39 @@ void Request::set_n_bytes(size_t n)
 
 void Request::split_by_rclt()
 {
+	// getting the request_line 
+
+	size_t request_line_pos = this->request_buf.find("\r\n");
+	if (request_line_pos == this->request_buf.npos)
+		return ;
+
+	this->request_line = this->request_buf.substr(0,request_line_pos);
+	this->request_buf.erase(0,request_line_pos+2);
+
 	// getting the body
 	size_t body_pos = this->request_buf.find("\r\n\r\n");
+	if (body_pos == this->request_buf.npos)
+		return ;
+
 	this->body = this->request_buf.substr(body_pos + 4,this->request_buf.npos);
 	this->request_buf.erase(body_pos + 4, this->request_buf.npos);
 
+	// getting the headers
 	std::vector<std::string> strs;
 	size_t pos = 0;	
 
-	// getting the headers and request line
-	size_t i  = 0;
-	while ((pos = this->request_buf.find("\r\n") ) != this->request_buf.npos)
-	{
-		if (i == 0)
-			this->request_line = this->request_buf.substr(0,pos);
-		else
-			strs.push_back(this->request_buf.substr(0,pos));
+	while ((pos = this->request_buf.find("\r\n") ) != this->request_buf.npos) {
+		if (pos == this->request_buf.npos)
+			return ;
+		strs.push_back(this->request_buf.substr(0,pos));
 		this->request_buf.erase(0,pos+2);
-		i++;
 	}
+	if (pos == this->request_buf.npos)
+		return ;
 	strs.push_back(this->request_buf);
 
 	// spliting headers and putting it in the private member headrs
-	i = 0;
+	size_t i  = 0;
 	while (i < strs.size())
 	{
 		if (strs[i].empty())
@@ -124,7 +135,9 @@ std::string Request::is_req_well_formed()
 	std::map<std::string, std::string>::iterator it = this->headers.find("Transfer-Encoding");
 	std::map<std::string, std::string>::iterator it1 = this->headers.find("Content-Length");
 
-	if (it != this->headers.end() && it->second.compare("chuncked"))
+	if (this->request_line.empty())
+		return ("400");
+	else if (it != this->headers.end() && it->second.compare("chuncked"))
 		return ("501");
 	else if (it == this->headers.end()  && it1 == this->headers.end() && !this->method.compare("POST"))
 		return ("400");
@@ -144,7 +157,7 @@ int Request::check_uri_characters()
 	std::string allowed_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=%";
 
 	std::string::iterator it = this->uri.begin();
-	it++;
+
 	while (it != this->uri.end())
 	{
 		if (allowed_chars.find(*it) == allowed_chars.npos)
@@ -157,6 +170,8 @@ int Request::check_uri_characters()
 void Request::split_request_line()
 {
 	// removes spaces
+	if (this->request_line.empty())
+		return;
 	this->remove_spaces(this->request_line);
 
 	std::string tmp = this->request_line;
@@ -194,12 +209,13 @@ void Request::split_request_line()
 
 void Request::parssing_the_request(char *buf,size_t s)
 {
+	// spliting the request
 	this->set_request_buf(buf);
 	this->set_n_bytes(s);
 	this->split_by_rclt();
 	this->split_request_line();
-	status = this->is_req_well_formed();
-	//std::cout << "|" << status <<  "|" << std::endl;
+	this->status = this->is_req_well_formed();
+	// request flow 
 	if (status.empty())
 	{
 		Default_serv *location;
@@ -220,7 +236,7 @@ void Request::parssing_the_request(char *buf,size_t s)
 		// no redirection
 		if (!t.first)
 		{
-			status = this->is_method_allowed_in_location(location);
+			this->status = this->is_method_allowed_in_location(location);
 			if (status.empty())
 			{
 				//std::cout << this->method << std::endl;
@@ -243,43 +259,21 @@ void Request::parssing_the_request(char *buf,size_t s)
 		}
 		// there is a redirection
 		this->status = std::to_string(t.first);
+		// i need to add location header
 		this->create_the_response();
 		return ;
 	}
 	this->create_the_response();
 }
+
 void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 {
 	// get path and file_type
-	std::string root = serv.first->get_root();
-	std::string second_root = "";
-	Default_serv *location = serv.first;
-	if (serv.second)
-	{
-		second_root = serv.second->get_root();
-		location = serv.second;
-	}
-	if (!second_root.empty())
-	{
-		int ret = (root[root.size() -1] == '/');
-		if ( ret && (second_root[0] == '/')  )
-			root.erase(root.size() - 1);
-		else if ( !ret  && !(second_root[0] == '/')  )
-			root.push_back('/');
-	}
+	Default_serv *location;
+	this->get_requested_resource(serv,&location);
 
-	// path
-	std::string path = root + second_root;
-	if (path[path.size() -1] != '/' && this->uri.size())
-		path.push_back('/');
+	int ret = access(this->file_to_read.c_str(),R_OK);
 
-	this->root_file = path;
-	path += this->uri;
-	path = this->find_path(path);
-	this->html_file = path;
-
-
-	int ret = access(path.c_str(),R_OK);
 	if (ret == -1)
 	{
 		this->status = "404";
@@ -288,118 +282,42 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 	else 
 	{
 		struct stat buf;
-		if (!stat(path.c_str(),&buf))
+		if (!stat(file_to_read.c_str(),&buf))
 		{
-			//std::cout << "this path :  " << path << " is  a : ";
 			// directory 
 			if (S_ISDIR(buf.st_mode))
 			{
 				if (this->request_uri[this->request_uri.size() - 1] == '/')
 				{
 					std::vector<std::string> indexs = location->get_index();
-
-					// there is indexs
-					if (indexs.size() > 0)
-					{
-						// check if there is a cgi
-						
-						std::vector<std::pair<std::string,std::string> > cgi = location->get_cgi_info();
-						// if there is not a cgi
-						for (size_t i = 0; i < indexs.size(); i++)
-						{
-							std::string index_path;
-							if (path[path.size() - 1] != '/')
-								index_path = path + '/';
-							index_path += indexs[i];
-							int ret = access(index_path.c_str(),R_OK);
-							if (!ret)
-							{
-								if ( ( (indexs[i].find(".py") != indexs[i].npos) || (indexs[i].find(".php") != indexs[i].npos )) && (cgi.size() > 0) ) 
-								{
-									std::string found_index = indexs[i];
-									for (size_t i = 0; i < cgi.size(); i++)
-									{
-										if (found_index.find(cgi[i].first) != found_index.npos)
-										{
-											this->html_file = index_path;
-											this->cgi = cgi[i];
-											break;
-										}
-									}
-									CGI aa(*this);
-									// run cgi
-									//std::cout << path << std::endl;
-									//this->html_file = "/Users/yaskour/lwt/www/index.py";
-									//this->status = "201";
-									//this->create_the_response();
-									return ;
-								}
-								this->html_file = index_path;
-								this->type_file = "text/html";
-								this->status = "200";
-								this->create_the_response();
-								return ;
-							}
-						}
-						// there is no index file
-						this->status = "403";
-						this->create_the_response();
-						return ;
-					}
-					else
-					{
-						// get autoindex
-						this->html_file = path;
-						int check;
-						check = location->get_autoindex();
-						if (check == 1)
-						{
-							this->type_file = "text/html";
-							this->create_auto_index();
-							this->status = "200";
-							this->fill_status_line();
-							this->fill_headers();
-
-							this->response = "";
-							this->response += this->status_line; 
-							this->response += this->response_headers;
-							this->response += this->response_body + "\r\n";
-						}
-						else
-						{
-							this->status = "403";
-							this->html_file = path;
-							this->create_the_response();
-						}
-
-					}
+					this->check_index_files(location);
 				}
 				else 
 				{
+					// this is a directory without a / in end
 					// redirect with the path with / in end
 					this->status = "301";
 					this->request_uri += '/';
-					this->html_file = path;
 					this->response_headers += "Location: " + this->request_uri + "\r\n";
 					this->create_the_response();
 				}
-				//std::cout << "directory" << std::endl;
 			}
 			else {
-				//std::cout << "file" << std::endl;
 				std::vector<std::pair<std::string,std::string> > b = location->get_cgi_info();
 				std::vector<std::pair<std::string,std::string> >::iterator t = b.begin();
 				if (t != b.end())
 				{
 					while (t != b.end())
 					{
-						if(this->html_file.find(t->first) != this->html_file.npos)
+						if(this->file_to_read.find(t->first) != this->file_to_read.npos)
 						{
 							this->cgi = *t;
 							CGI aa(*this);
-							this->type_file = "text/html";
+							this->file_type = "text/html";
 							this->fill_status_line();
 							this->fill_headers();
+							// when cgi returns error i need to fill the body error
+							this->fill_body(std::stoi(status));
 							this->response = "";
 							this->response += this->status_line; 
 							this->response += this->response_headers;
@@ -409,10 +327,9 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 						t++;	
 					}
 				}
-				if (this->type_file.empty())
-					this->type_file = "text/plain";
+				if (this->file_type.empty())
+					this->file_type = "text/plain";
 				this->status = "200";
-				this->html_file = path;
 				this->create_the_response();
 			}
 
@@ -438,25 +355,58 @@ void Request::POST_METHOD(std::pair<Server *,Default_serv *> serv)
 		// upload the post request body
 		std::cout << "on" << std::endl;
 		this->status = "404";
-		this->type_file = "text/html";
+		this->file_type = "text/html";
 		this->create_the_response();
 		return ;
 	}
-	std::cout << this->body << std::endl;
-	//this->get_requested_resource(location);
+	std::cout <<  "body : " << this->body << std::endl;
+	std::cout <<  "uri :" << this->uri << std::endl;
+	this->get_requested_resource(serv,&location);
+	std::cout << "html_file :" << this->file_to_read << std::endl;
+	std::cout << "file type : " << this->file_type << std::endl;
 }
 
+std::string Request::get_requested_resource(std::pair<Server *,Default_serv *> serv,Default_serv **location)
+{
+	std::string root = serv.first->get_root();
+	std::string second_root = "";
+	*location = (serv.first);
+	if (serv.second)
+	{
+		second_root = serv.second->get_root();
+		*location = serv.second;
+	}
+	if (!second_root.empty())
+	{
+		int ret = (root[root.size() -1] == '/');
+		if ( ret && (second_root[0] == '/')  )
+			root.erase(root.size() - 1);
+		else if ( !ret  && !(second_root[0] == '/')  )
+			root.push_back('/');
+	}
 
+	// path
+	std::string path = root + second_root;
+	if (path[path.size() -1] != '/' && this->uri.size())
+		path.push_back('/');
+
+	this->file_root = path;
+	path += this->uri;
+
+	path = this->find_type(path);
+	this->file_to_read = path;
+	return path;
+}
 
 
 
 void Request::create_auto_index()
 {
-	//std::cout <<  this->html_file << std::endl;
+	//std::cout <<  this->file_to_read << std::endl;
 	std::string auto_index = "<html><head><title>index</title></head><body><ul>";
 
 
-	DIR *index = opendir(this->html_file.c_str());
+	DIR *index = opendir(this->file_to_read.c_str());
 	if (!index)
 	{
 		perror("opendir");
@@ -494,8 +444,9 @@ std::vector<std::string>	Request::split_ext(std::string ext)
 	return exts;
 }
 
-std::string Request::find_path(std::string path)
+std::string Request::find_type(std::string path)
 {
+	this->file_type = "text/plain";
 	size_t exetension = path.rfind('.');
 	if (exetension != path.npos)
 	{
@@ -514,24 +465,11 @@ std::string Request::find_path(std::string path)
 				std::string path_ext = path + "." + exts[i];
 				if (!access(path_ext.c_str(),R_OK))
 				{
-					this->type_file = it->first;
+					this->file_type = it->first;
 					return path_ext;
 				}
 			}
 			it++;
-		}
-		// check if it's python or php
-		std::string path_ext = path + ".py";
-		if (!access(path_ext.c_str(),R_OK))
-		{
-			this->type_file = "text/plain";
-			return path_ext;
-		}
-		path_ext = path + ".php";
-		if (!access(path_ext.c_str(),R_OK))
-		{
-			this->type_file = "text/plain";
-			return path_ext;
 		}
 	}
 	return path;
@@ -549,7 +487,7 @@ void Request::type_of_file(std::string ext,std::map<std::string,std::string> mim
 			size_t pos;
 			if ((pos = exts[i].find(ext))!= exts[i].npos && ( exts[i].size() == ext.size() ) )
 			{
-				this->type_file = it->first;
+				this->file_type = it->first;
 				return ;
 			}
 		}
@@ -566,7 +504,7 @@ std::string Request::get_response_body()
 void Request::fill_headers()
 {
 	// i need to check what type of content
-	this->response_headers += "Content-Type: " + this->type_file + "\r\n";
+	this->response_headers += "Content-Type: " + this->file_type + "\r\n";
 	this->response_headers += "Content-Length: " + std::to_string(this->response_body.length()) + "\r\n";
 	this->response_headers += "\r\n";
 
@@ -615,6 +553,7 @@ void Request::fill_body(int status)
 	if (status >=  300)
 	{
 		// getting the html and fill the body
+		this->file_type = "text/html";
 		std::vector<std::pair<int,std::string> > t = this->server->get_status_page();
 		size_t i = 0;
 		for (; i < t.size();i++)
@@ -632,7 +571,7 @@ void Request::fill_body(int status)
 	}
 	else 
 	{
-		std::ifstream f(this->html_file);
+		std::ifstream f(this->file_to_read);
 		if (f.is_open())
 		{
 			std::ostringstream ss;
@@ -737,7 +676,7 @@ void Request::create_the_response()
 
 std::string Request::get_file_path()
 {
-	return (this->html_file);
+	return (this->file_to_read);
 }
 
 std::string Request::get_method()
@@ -752,7 +691,7 @@ std::string Request::get_query()
 
 std::string Request::get_file_root()
 {
-	return (this->root_file);
+	return (this->file_root);
 }
 
 std::pair<std::string,std::string> Request::get_cgi()
@@ -775,4 +714,79 @@ void Request::set_response_headers(std::string headers)
 void Request::set_status_code(std::string status)
 {   
 	this->status = status;
+}
+
+void Request::check_cgi(Default_serv *location,std::string file)
+{
+	std::vector<std::pair<std::string,std::string> > cgi = location->get_cgi_info();
+	size_t end = file.npos;
+	if ( ( (file.find(".py") != end) || (file.find(".php") != end) ) && cgi.size() > 0 )
+	{
+		for (size_t i = 0; i < cgi.size();i++)
+		{
+			if (file.find(cgi[i].first) != end)
+			{
+				this->file_to_read = file;
+				this->cgi = cgi[i];
+				CGI aa(*this);
+				// i need to check cgi errors
+				this->fill_status_line();
+				this->fill_headers();
+				this->join_reponse_parts();
+				return ;
+			}
+		}
+	}
+	this->file_to_read = file;
+	this->find_type(this->file_to_read);
+	this->status = "200";
+	this->create_the_response();
+}
+
+void Request::check_index_files(Default_serv *location)
+{
+	std::vector<std::string> indexs = location->get_index();
+	if (indexs.size() > 0)
+	{
+		std::string path_with_index;
+		for (size_t i = 0; i < indexs.size(); i++)
+		{
+			if (this->file_to_read[file_to_read.size() - 1] != '/')
+				path_with_index = file_to_read + '/';
+			else
+				path_with_index = file_to_read;
+			path_with_index += indexs[i];
+			if (!access(path_with_index.c_str(), R_OK))
+				return check_cgi(location,path_with_index);
+		}
+		// no index files
+		this->status = "403";
+		this->create_the_response();
+	}
+	else
+	{
+		int is_autoindex = location->get_autoindex();
+		if (is_autoindex == 1)
+		{
+			this->file_type = "text/html";
+			this->create_auto_index();
+			this->status = "200";
+			this->fill_status_line();
+			this->fill_headers();
+			this->join_reponse_parts();
+		}
+		else
+		{
+			this->status = "403";
+			this->create_the_response();
+		}
+	}
+}
+
+void Request::join_reponse_parts()
+{
+	this->response = "";
+	this->response += this->status_line; 
+	this->response += this->response_headers;
+	this->response += this->response_body + "\r\n";
 }

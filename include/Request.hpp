@@ -29,7 +29,6 @@ class Request
 	std::string response;
 
 	std::string status;
-
 	std::string uri;
 	std::string status_line;
 
@@ -39,14 +38,15 @@ class Request
 	// 
 
 	std::string query;
+
+	// cgi
 	std::pair<std::string,std::string> cgi;
 
 
-	// file to to read
-	std::string html_file;
-	std::string type_file;
-
-	std::string root_file;
+	// file to to read info
+	std::string file_to_read;
+	std::string file_type;
+	std::string file_root;
 
 
 
@@ -101,11 +101,13 @@ class Request
 
 		// helpers
 		void type_of_file(std::string path,std::map<std::string,std::string> mime);
-		std::string find_path(std::string path);
+		std::string find_type(std::string path);
 		std::vector<std::string>	split_ext(std::string ext);
 		void create_auto_index();
 		int location_support_upload(Default_serv *location);
-		std::string get_requested_resource(Default_serv *location);
-		std::string get_root_path(Default_serv *location);
+		std::string get_requested_resource(std::pair<Server *,Default_serv *> serv,Default_serv **);
+		void check_index_files(Default_serv *);
+		void check_cgi(Default_serv *,std::string path_with_index);
+		void join_reponse_parts();
 
 };
