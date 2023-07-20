@@ -1,14 +1,4 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Request.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/19 20:36:11 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/20 20:22:41 by yaskour          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+
 
 
 #include "../include/Request.hpp"
@@ -705,12 +695,17 @@ std::pair<std::string,std::string> Request::get_cgi()
 void Request::set_response_body(std::string body)
 {
 	this->response_body = body;
-	cout << "==> "<< this->response_body << endl;
+	cout << this->response_body << endl;
 }
 
 void Request::set_response_headers(std::string headers)
-{   
-	this->response_headers = headers;
+{
+	if (this->response_headers.length() == 0)
+		this->response_headers = headers;
+	else {
+		this->response_headers += "\r\n" + headers;
+	}
+	cout << this->response_headers << endl;
 }
 
 void Request::set_status_code(std::string status)
@@ -733,7 +728,7 @@ void Request::check_cgi(Default_serv *location,std::string file)
 				this->cgi = cgi[i];
 				// i need to check cgi errors
 				CGI aa(*this);
-				if (!status.compare("200"))
+				if (status.compare("200"))
 				{
 					this->create_the_response();
 					return;

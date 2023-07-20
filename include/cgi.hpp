@@ -6,7 +6,7 @@
 /*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/13 18:23:31 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/20 13:42:56 by amrakibe         ###   ########.fr       */
+/*   Updated: 2023/07/20 20:24:19 by amrakibe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,6 @@ using namespace std;
 class CGI
 {
     private:
-        // std::string _body;
-        // std::string _quryString;
         std::vector<std::string> _env;
         Request &_request;
         char **_av;
@@ -44,4 +42,5 @@ class CGI
         void getNameScript();
         bool isPython();
         vector<string> split(string line, std::string delimiter);
+        void ParsHeader(string header, string header_name);
 };
