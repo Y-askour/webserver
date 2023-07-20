@@ -6,7 +6,7 @@
 /*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/13 18:23:43 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/20 09:54:38 by amrakibe         ###   ########.fr       */
+/*   Updated: 2023/07/20 10:15:39 by amrakibe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,15 +59,15 @@ CGI::CGI(Request &_request) : _request(_request)
 
     if (pipe(Pfd1) == -1 || this->_av == NULL)
     {
-        _request.set_response_body("403");
-        exit(EXIT_FAILURE);
+        _request.set_status_code("403");
+        return ;
     }
 
     pid = fork();
     if (pid == -1)
     {  
-        _request.set_response_body("403");
-        exit(EXIT_FAILURE);
+            _request.set_status_code("403");
+            return ;
     }
 
     if (pid == 0)
@@ -75,8 +75,8 @@ CGI::CGI(Request &_request) : _request(_request)
         FILE *file = tmpfile();
         if(file == NULL) 
         {
-            _request.set_response_body("403");
-            exit(EXIT_FAILURE);
+            _request.set_status_code("403");
+            return ;
         }
     
         fputs(body.c_str(), file);
@@ -87,10 +87,11 @@ CGI::CGI(Request &_request) : _request(_request)
         
         dup2(Pfd1[1], 1);
         close(Pfd1[1]);
-
+        
         if(execve(_av[0], _av, _envToChar(_env)) == -1)
         {
-            exit(EXIT_FAILURE);
+            _request.set_status_code("403");
+            return ;
         }
     }
     waitpid(pid, &status, 0);
@@ -103,7 +104,9 @@ CGI::CGI(Request &_request) : _request(_request)
     close(Pfd1[1]);
     while ((ret = read(Pfd1[0], buf, sizeof(buf)) > 0))
     {
+        str += buf;
         _request.set_response_body(buf);
+        _request.set_status_code("200");
     }
 	close(Pfd1[0]);
 
@@ -112,6 +115,7 @@ CGI::CGI(Request &_request) : _request(_request)
 
     close(fd_in);
 	close(fd_out);
+    cout << str << endl;
 }
 
 char **CGI::_envToChar(vector<string> _env)
@@ -161,13 +165,6 @@ bool CGI::isPython()
     return (false);
 }
 
-string strjoin(string arr, string arr2)
-{
-    string ret;
-    ret = arr + " " + arr2;
-    return (ret);
-}
-
 void CGI::getNameScript()
 {
     vector<string> cgi_result;
@@ -188,9 +185,8 @@ void CGI::getNameScript()
     this->_av[0] = strdup(cgi_result[0].c_str());
     this->_av[1] = strdup(_request.get_file_path().c_str());
     this->_av[2] = NULL;
+    // cout 
 }
-
-
 
 CGI::~CGI()
 {

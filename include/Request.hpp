@@ -73,6 +73,8 @@ class Request
 		void set_n_bytes(size_t n);
 		void set_response_body(std::string body);
 		void set_response_headers(std::string headers);
+		void set_status_code(std::string status);
+
 		// helpers
 		void split_by_rclt();
 		void remove_spaces(std::string &t);

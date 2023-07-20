@@ -6,7 +6,7 @@
 /*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 20:36:11 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/20 09:58:29 by amrakibe         ###   ########.fr       */
+/*   Updated: 2023/07/20 10:14:19 by amrakibe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -771,4 +771,9 @@ void Request::set_response_body(std::string body)
 void Request::set_response_headers(std::string headers)
 {   
 	this->response_headers = headers;
+}
+
+void Request::set_status_code(std::string status)
+{   
+	this->status = status;
 }
