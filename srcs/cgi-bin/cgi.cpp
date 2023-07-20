@@ -55,11 +55,11 @@ void CGI::ParsHeader(string header, string cookies)
 CGI::CGI(Request &_request) : _request(_request)
 {
     setEnv();
-    isPython();
     getNameScript();
     string arr;
     char buf[4096] = {0};
-    int pid, Pfd1[2], status = 0, fd_in = dup(0), fd_out = dup(1);
+    int status = 0;
+    int pid, Pfd1[2] , fd_in = dup(0), fd_out = dup(1);
     size_t ret;
     if (pipe(Pfd1) == -1 || this->_av == NULL)
     {
@@ -93,13 +93,16 @@ CGI::CGI(Request &_request) : _request(_request)
         close(Pfd1[1]);
 
         if (execve(_av[0], _av, _envToChar(_env)) == -1)
-        {
-            _request.set_status_code("403");
-            exit(1);
-        }
+            exit(5);
         // _request.set_status_code("200");
     }
     waitpid(pid, &status, 0);
+    status = WEXITSTATUS(status);
+    if (status == 5)
+    {
+        this->_request.set_status_code("403");
+        return;
+    }
     if (status == -1)
     {
         _request.set_status_code("403");
