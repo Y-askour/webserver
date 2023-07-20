@@ -6,7 +6,7 @@
 /*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/13 18:23:43 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/20 10:15:39 by amrakibe         ###   ########.fr       */
+/*   Updated: 2023/07/20 10:38:53 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,7 @@ CGI::CGI(Request &_request) : _request(_request)
     waitpid(pid, &status, 0);
     if (status == -1)
     {
-        _request.set_response_body("403");
+        _request.set_status_code("403");
         exit(EXIT_FAILURE);
     }
 
