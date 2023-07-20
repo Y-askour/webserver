@@ -6,7 +6,7 @@
 /*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 20:36:11 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/20 19:06:10 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/20 20:22:41 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -259,6 +259,8 @@ void Request::parssing_the_request(char *buf,size_t s)
 		}
 		// there is a redirection
 		this->status = std::to_string(t.first);
+		this->response_headers = "Location: " + t.second  + "\r\n";
+
 		// i need to add location header
 		this->create_the_response();
 		return ;
