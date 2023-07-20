@@ -6,7 +6,7 @@
 /*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 20:36:11 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/19 21:18:13 by amrakibe         ###   ########.fr       */
+/*   Updated: 2023/07/20 09:58:29 by amrakibe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -391,7 +391,26 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 				std::vector<std::pair<std::string,std::string> >::iterator t = b.begin();
 				if (t != b.end())
 				{
-						// cgi
+					while (t != b.end())
+					{
+						if(this->html_file.find(t->first) != this->html_file.npos)
+						{
+							this->cgi = *t;
+							break;
+						}
+						t++;	
+					}
+					// cgi
+					CGI aa(*this);
+					this->status = "200";
+					this->type_file = "text/html";
+					this->fill_status_line();
+					this->fill_headers();
+					this->response = "";
+					this->response += this->status_line; 
+					this->response += this->response_headers;
+					this->response += this->response_body + "\r\n";
+					return ;
 				}
 				if (this->type_file.empty())
 					this->type_file = "text/plain";
