@@ -6,7 +6,7 @@
 /*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/13 18:23:31 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/19 17:35:33 by amrakibe         ###   ########.fr       */
+/*   Updated: 2023/07/20 13:42:56 by amrakibe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,5 +43,5 @@ class CGI
         void PERROR(std::string error);
         void getNameScript();
         bool isPython();
-        vector<string> split(string line, char delimiter = ' ');
+        vector<string> split(string line, std::string delimiter);
 };
