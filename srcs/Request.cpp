@@ -6,7 +6,7 @@
 /*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 20:36:11 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/20 17:17:40 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/20 19:06:10 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -311,24 +311,25 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 					{
 						if(this->file_to_read.find(t->first) != this->file_to_read.npos)
 						{
-							this->cgi = *t;
-							CGI aa(*this);
 							this->file_type = "text/html";
+							this->cgi = *t;
+							// when cgi returns error i need to fill the body error
+							CGI aa(*this);
+							if (status.compare("200") != 0)
+							{
+								this->create_the_response();
+								return;
+							}
 							this->fill_status_line();
 							this->fill_headers();
-							// when cgi returns error i need to fill the body error
-							this->fill_body(std::stoi(status));
-							this->response = "";
-							this->response += this->status_line; 
-							this->response += this->response_headers;
-							this->response += this->response_body + "\r\n";
+							this->join_reponse_parts();
 							return ;
 						}
 						t++;	
 					}
 				}
-				if (this->file_type.empty())
-					this->file_type = "text/plain";
+				this->find_type(this->file_to_read);
+				std::cout << this->file_type << std::endl;
 				this->status = "200";
 				this->create_the_response();
 			}
@@ -708,7 +709,6 @@ void Request::set_response_body(std::string body)
 void Request::set_response_headers(std::string headers)
 {   
 	this->response_headers = headers;
-	// cout << "headers ==> "<< this->response_headers << endl;
 }
 
 void Request::set_status_code(std::string status)
@@ -726,10 +726,17 @@ void Request::check_cgi(Default_serv *location,std::string file)
 		{
 			if (file.find(cgi[i].first) != end)
 			{
+				this->status = "200";
 				this->file_to_read = file;
 				this->cgi = cgi[i];
-				CGI aa(*this);
 				// i need to check cgi errors
+				CGI aa(*this);
+				if (!status.compare("200"))
+				{
+					this->create_the_response();
+					return;
+				}
+				this->file_type = "text/html";
 				this->fill_status_line();
 				this->fill_headers();
 				this->join_reponse_parts();

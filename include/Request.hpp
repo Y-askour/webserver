@@ -109,5 +109,4 @@ class Request
 		void check_index_files(Default_serv *);
 		void check_cgi(Default_serv *,std::string path_with_index);
 		void join_reponse_parts();
-
 };
