@@ -6,7 +6,7 @@
 /*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/19 20:36:11 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/20 10:23:21 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/20 13:17:24 by amrakibe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -404,7 +404,7 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 							this->response += this->status_line; 
 							this->response += this->response_headers;
 							this->response += this->response_body + "\r\n";
-							break;
+							return ;
 						}
 						t++;	
 					}
@@ -763,11 +763,13 @@ std::pair<std::string,std::string> Request::get_cgi()
 void Request::set_response_body(std::string body)
 {
 	this->response_body = body;
+	cout << "==> "<< this->response_body << endl;
 }
 
 void Request::set_response_headers(std::string headers)
 {   
 	this->response_headers = headers;
+	// cout << "headers ==> "<< this->response_headers << endl;
 }
 
 void Request::set_status_code(std::string status)
