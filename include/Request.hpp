@@ -96,8 +96,9 @@ class Request
 		void fill_headers();
 
 		// methods
-		void GET_METHOD(std::pair<Server *,Default_serv *>);
-		void POST_METHOD(std::pair<Server *,Default_serv *>);
+		void	GET_METHOD(std::pair<Server *,Default_serv *>);
+		void	POST_METHOD(std::pair<Server *,Default_serv *>);
+		void	DELETE_METHOD(std::pair<Server *, Default_serv *> serv);
 
 		// helpers
 		void type_of_file(std::string path,std::map<std::string,std::string> mime);
@@ -109,5 +110,4 @@ class Request
 		void check_index_files(Default_serv *);
 		void check_cgi(Default_serv *,std::string path_with_index);
 		void join_reponse_parts();
-
 };

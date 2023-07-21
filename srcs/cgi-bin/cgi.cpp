@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   cgi.cpp                                            :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/13 18:23:43 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/20 13:40:52 by amrakibe         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "../../include/cgi.hpp"
 #include <string>
@@ -23,7 +12,7 @@ vector<string> CGI::split(string line, std::string delimiter)
     {
         sub_string = line.substr(0, npos);
         v.push_back(sub_string);
-        line.erase(0,npos + 1);
+        line.erase(0,npos + delimiter.length());
     }
     v.push_back(line);
     return (v);
@@ -40,25 +29,38 @@ CGI &CGI::operator=(CGI const &other)
 {
     if (this != &other)
     {
-        // _body = other._body;
-        // _quryString = other._quryString;
         _env = other._env;
         _av = other._av;
     }
     return (*this);
 }
 
+void CGI::ParsHeader(string header, string cookies)
+{
+    vector<string> a = split(header, "\r\n");
+    string cookie;
+    string hold;
+
+    for(size_t i = 0; i < a.size(); i++)
+    {
+        hold = a[i].substr(0, a[i].find(":"));
+        if (hold == cookies) 
+        {
+            cookie = a[i].substr(0, a[i].size());
+            _request.set_response_headers(cookie);
+        }
+    }
+}
+
 CGI::CGI(Request &_request) : _request(_request)
 {
     setEnv();
-    isPython();
     getNameScript();
     string arr;
     char buf[4096] = {0};
-    int pid, Pfd1[2], status = 0, fd_in = dup(0), fd_out = dup(1);
+    int status = 0;
+    int pid, Pfd1[2] , fd_in = dup(0), fd_out = dup(1);
     size_t ret;
-    string str;
-
     if (pipe(Pfd1) == -1 || this->_av == NULL)
     {
         _request.set_status_code("403");
@@ -91,28 +93,27 @@ CGI::CGI(Request &_request) : _request(_request)
         close(Pfd1[1]);
 
         if (execve(_av[0], _av, _envToChar(_env)) == -1)
-        {
-            cerr << "execve error" << endl;
-            _request.set_status_code("403");
-            return;
-        }
+            exit(5);
+        // _request.set_status_code("200");
     }
     waitpid(pid, &status, 0);
+    status = WEXITSTATUS(status);
+    if (status == 5)
+    {
+        this->_request.set_status_code("403");
+        return;
+    }
     if (status == -1)
     {
         _request.set_status_code("403");
         exit(EXIT_FAILURE);
     }
-
+    
     close(Pfd1[1]);
     while ((ret = read(Pfd1[0], buf, sizeof(buf)) > 0))
     {
-        // str += buf;
-       std::vector<std::string> bufs = split(buf, "\r\n");
-        for (size_t i = 0; i < bufs.size() ; i++)
-        {
-            std::cout << bufs[i] << std::endl;
-        }
+        std::vector<std::string> bufs = split(buf, "\r\n");
+        ParsHeader(buf, "Set-Cookie");
         _request.set_response_body(bufs[bufs.size() - 1]);
         _request.set_status_code("200");
     }
@@ -123,7 +124,6 @@ CGI::CGI(Request &_request) : _request(_request)
 
     close(fd_in);
     close(fd_out);
-    // cout << str << endl;
 }
 
 char **CGI::_envToChar(vector<string> _env)
@@ -159,6 +159,7 @@ void CGI::setEnv()
     _env.push_back("CONTENT_LENGTH=" + to_string(body.length()));
     _env.push_back("DOCUMENT_ROOT=" + _request.get_file_root());
     _env.push_back("HTTP_COOKIE=first_name=amine&last_name=rakibe");
+    // _env.push_back("HTTP_COOKIE=first_name=amine&last_name=rakibe");
 }
 
 bool CGI::isPython()

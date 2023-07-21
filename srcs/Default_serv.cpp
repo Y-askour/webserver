@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/16 19:10:28 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/19 10:28:28 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/21 16:05:05 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,6 @@ Default_serv::Default_serv(void)
 	this->client_max_body_size = "10000";
 	this->upload = 0;
 	this->autoindex = 0;
-	this->allow_methods.push_back("GET");
 }
 
 //this one for location

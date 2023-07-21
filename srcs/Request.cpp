@@ -1,16 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Request.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: amrakibe <amrakibe@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/19 20:36:11 by amrakibe          #+#    #+#             */
-/*   Updated: 2023/07/20 17:17:40 by yaskour          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-
 #include "../include/Request.hpp"
 #include <cctype>
 #include <fstream>
@@ -18,6 +5,7 @@
 #include <shared_mutex>
 #include <sstream>
 #include <string>
+#include <sys/stat.h>
 #include <sys/unistd.h>
 #include <unistd.h>
 #include <vector>
@@ -82,10 +70,6 @@ void Request::split_by_rclt()
 		strs.push_back(this->request_buf.substr(0,pos));
 		this->request_buf.erase(0,pos+2);
 	}
-	if (pos == this->request_buf.npos)
-		return ;
-	strs.push_back(this->request_buf);
-
 	// spliting headers and putting it in the private member headrs
 	size_t i  = 0;
 	while (i < strs.size())
@@ -245,8 +229,7 @@ void Request::parssing_the_request(char *buf,size_t s)
 				else if (this->method.compare("POST") == 0)
 					this->POST_METHOD(status_location);
 				else if (this->method.compare("DELETE") == 0)
-				{
-				}
+					this->DELETE_METHOD(status_location);
 				else 
 				{
 				}
@@ -259,6 +242,8 @@ void Request::parssing_the_request(char *buf,size_t s)
 		}
 		// there is a redirection
 		this->status = std::to_string(t.first);
+		this->response_headers = "Location: " + t.second  + "\r\n";
+
 		// i need to add location header
 		this->create_the_response();
 		return ;
@@ -306,29 +291,9 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 				std::vector<std::pair<std::string,std::string> > b = location->get_cgi_info();
 				std::vector<std::pair<std::string,std::string> >::iterator t = b.begin();
 				if (t != b.end())
-				{
-					while (t != b.end())
-					{
-						if(this->file_to_read.find(t->first) != this->file_to_read.npos)
-						{
-							this->cgi = *t;
-							CGI aa(*this);
-							this->file_type = "text/html";
-							this->fill_status_line();
-							this->fill_headers();
-							// when cgi returns error i need to fill the body error
-							this->fill_body(std::stoi(status));
-							this->response = "";
-							this->response += this->status_line; 
-							this->response += this->response_headers;
-							this->response += this->response_body + "\r\n";
-							return ;
-						}
-						t++;	
-					}
-				}
-				if (this->file_type.empty())
-					this->file_type = "text/plain";
+					return this->check_cgi(location,this->file_to_read);
+				this->find_type(this->file_to_read);
+				std::cout << this->file_type << std::endl;
 				this->status = "200";
 				this->create_the_response();
 			}
@@ -359,11 +324,64 @@ void Request::POST_METHOD(std::pair<Server *,Default_serv *> serv)
 		this->create_the_response();
 		return ;
 	}
-	std::cout <<  "body : " << this->body << std::endl;
-	std::cout <<  "uri :" << this->uri << std::endl;
 	this->get_requested_resource(serv,&location);
-	std::cout << "html_file :" << this->file_to_read << std::endl;
-	std::cout << "file type : " << this->file_type << std::endl;
+	int ret = access(this->file_to_read.c_str(),R_OK);
+	// not found
+	if (ret == -1)
+	{
+		this->status = "404";
+		this->create_the_response();
+	}
+	if (!ret)
+	{
+		struct stat buf;
+		if (!stat(file_to_read.c_str(),&buf))
+		{
+			if (S_ISDIR(buf.st_mode)) // directory
+			{
+				if (this->request_uri[this->request_uri.size() - 1] == '/')
+				{
+					std::vector<std::string> indexs = location->get_index();
+					this->check_index_files(location);
+				}
+				else
+				{
+					this->status = "301";
+					this->request_uri += '/';
+					this->response_headers += "Location: " + this->request_uri + "\r\n";
+					this->create_the_response();
+				}
+			}
+			else // file
+			{
+				std::vector<std::pair<std::string,std::string> > b = location->get_cgi_info();
+				std::vector<std::pair<std::string,std::string> >::iterator t = b.begin();
+				if (t != b.end())
+					return this->check_cgi(location,this->file_to_read);
+				this->status  = "403";
+				this->create_the_response();
+			}
+
+		}
+	}
+}
+
+void	Request::DELETE_METHOD(std::pair<Server *, Default_serv *> serv) {
+	Default_serv	*location;
+	std::string	hld;
+
+	hld = this->get_requested_resource(serv, &location);
+	std::cout << hld << std::endl;
+	//exit(1);
+
+
+	int ret = access(this->file_to_read.c_str(),R_OK);
+
+	if (ret == -1)
+	{
+		this->status = "404";
+		this->create_the_response();
+	}
 }
 
 std::string Request::get_requested_resource(std::pair<Server *,Default_serv *> serv,Default_serv **location)
@@ -396,6 +414,7 @@ std::string Request::get_requested_resource(std::pair<Server *,Default_serv *> s
 	path = this->find_type(path);
 	this->file_to_read = path;
 	return path;
+	//why the fuck did u return in here
 }
 
 
@@ -702,13 +721,17 @@ std::pair<std::string,std::string> Request::get_cgi()
 void Request::set_response_body(std::string body)
 {
 	this->response_body = body;
-	cout << "==> "<< this->response_body << endl;
+	cout << this->response_body << endl;
 }
 
 void Request::set_response_headers(std::string headers)
-{   
-	this->response_headers = headers;
-	// cout << "headers ==> "<< this->response_headers << endl;
+{
+	if (this->response_headers.length() == 0)
+		this->response_headers = headers;
+	else {
+		this->response_headers += "\r\n" + headers;
+	}
+	cout << this->response_headers << endl;
 }
 
 void Request::set_status_code(std::string status)
@@ -726,10 +749,14 @@ void Request::check_cgi(Default_serv *location,std::string file)
 		{
 			if (file.find(cgi[i].first) != end)
 			{
+				this->status = "200";
 				this->file_to_read = file;
 				this->cgi = cgi[i];
-				CGI aa(*this);
 				// i need to check cgi errors
+				CGI aa(*this);
+				if (status.compare("200"))
+					return this->create_the_response();
+				this->file_type = "text/html";
 				this->fill_status_line();
 				this->fill_headers();
 				this->join_reponse_parts();
@@ -737,9 +764,14 @@ void Request::check_cgi(Default_serv *location,std::string file)
 			}
 		}
 	}
-	this->file_to_read = file;
-	this->find_type(this->file_to_read);
-	this->status = "200";
+	if (!this->status.compare("GET"))
+	{
+		this->status = "200";
+		this->file_to_read = file;
+		this->find_type(this->file_to_read);
+		return ;
+	}
+	this->status = "403";
 	this->create_the_response();
 }
 
@@ -763,7 +795,7 @@ void Request::check_index_files(Default_serv *location)
 		this->status = "403";
 		this->create_the_response();
 	}
-	else
+	else if (!this->method.compare("GET"))
 	{
 		int is_autoindex = location->get_autoindex();
 		if (is_autoindex == 1)
@@ -780,6 +812,11 @@ void Request::check_index_files(Default_serv *location)
 			this->status = "403";
 			this->create_the_response();
 		}
+	}
+	else
+	{
+		this->status = "403";
+		this->create_the_response();
 	}
 }
 
