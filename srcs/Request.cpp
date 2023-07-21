@@ -749,14 +749,13 @@ void Request::check_cgi(Default_serv *location,std::string file)
 			}
 		}
 	}
-	if (!this->status.compare("GET"))
+	this->status = "403";
+	if (!this->method.compare("GET"))
 	{
 		this->status = "200";
 		this->file_to_read = file;
 		this->find_type(this->file_to_read);
-		return ;
 	}
-	this->status = "403";
 	this->create_the_response();
 }
 
