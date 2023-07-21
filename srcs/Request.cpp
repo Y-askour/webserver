@@ -1,6 +1,3 @@
-
-
-
 #include "../include/Request.hpp"
 #include <cctype>
 #include <fstream>
@@ -232,8 +229,7 @@ void Request::parssing_the_request(char *buf,size_t s)
 				else if (this->method.compare("POST") == 0)
 					this->POST_METHOD(status_location);
 				else if (this->method.compare("DELETE") == 0)
-				{
-				}
+					this->DELETE_METHOD(status_location);
 				else 
 				{
 				}
@@ -370,6 +366,24 @@ void Request::POST_METHOD(std::pair<Server *,Default_serv *> serv)
 	}
 }
 
+void	Request::DELETE_METHOD(std::pair<Server *, Default_serv *> serv) {
+	Default_serv	*location;
+	std::string	hld;
+
+	hld = this->get_requested_resource(serv, &location);
+	std::cout << hld << std::endl;
+	//exit(1);
+
+
+	int ret = access(this->file_to_read.c_str(),R_OK);
+
+	if (ret == -1)
+	{
+		this->status = "404";
+		this->create_the_response();
+	}
+}
+
 std::string Request::get_requested_resource(std::pair<Server *,Default_serv *> serv,Default_serv **location)
 {
 	std::string root = serv.first->get_root();
@@ -400,6 +414,7 @@ std::string Request::get_requested_resource(std::pair<Server *,Default_serv *> s
 	path = this->find_type(path);
 	this->file_to_read = path;
 	return path;
+	//why the fuck did u return in here
 }
 
 

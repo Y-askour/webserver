@@ -96,8 +96,9 @@ class Request
 		void fill_headers();
 
 		// methods
-		void GET_METHOD(std::pair<Server *,Default_serv *>);
-		void POST_METHOD(std::pair<Server *,Default_serv *>);
+		void	GET_METHOD(std::pair<Server *,Default_serv *>);
+		void	POST_METHOD(std::pair<Server *,Default_serv *>);
+		void	DELETE_METHOD(std::pair<Server *, Default_serv *> serv);
 
 		// helpers
 		void type_of_file(std::string path,std::map<std::string,std::string> mime);
