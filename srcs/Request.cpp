@@ -83,6 +83,7 @@ void Request::split_by_rclt()
 		header.first = strs[i].substr(0,pos);
 		this->remove_spaces_at_end(header.first);
 		strs[i].erase(0,pos + 1);
+		this->remove_spaces_at_start(strs[i]);
 		this->remove_spaces_at_end(strs[i]);
 		header.second = strs[i];
 		this->headers.insert(header);
@@ -111,7 +112,7 @@ std::string Request::is_req_well_formed()
 
 	if (!this->bad_request.compare("1"))
 		return ("400");
-	else if (it != this->headers.end() && it->second.compare("chuncked"))
+	else if (it != this->headers.end() && it->second.compare("chuncked") != 0)
 		return ("501");
 	else if (it == this->headers.end()  && it1 == this->headers.end() && !this->method.compare("POST"))
 		return ("400");
@@ -188,9 +189,8 @@ std::vector<std::string>    Request::split(std::string input, char sp) {
     return header;
 }
 
-void remove_spaces_at_start(std::string &str) 
+void Request::remove_spaces_at_start(std::string &str) 
 {
-	// delete spaces in the end
 	std::string::iterator it = str.begin();
 
 	while (it != str.end())
@@ -201,7 +201,6 @@ void remove_spaces_at_start(std::string &str)
 		 	str.erase(it);
 		it++;
 	}
-	
 }
 
 std::string Request::turn_whitespaces_to_space(std::string input)
