@@ -38,8 +38,7 @@ CGI &CGI::operator=(CGI const &other)
 void CGI::ParsHeader(string header, string cookies)
 {
     vector<string> a = split(header, "\r\n");
-    string cookie;
-    string hold;
+    string cookie, hold;
 
     for(size_t i = 0; i < a.size(); i++)
     {
@@ -61,6 +60,7 @@ CGI::CGI(Request &_request) : _request(_request)
     int status = 0;
     int pid, Pfd1[2] , fd_in = dup(0), fd_out = dup(1);
     size_t ret;
+
     if (pipe(Pfd1) == -1 || this->_av == NULL)
     {
         _request.set_status_code("403");
@@ -76,6 +76,10 @@ CGI::CGI(Request &_request) : _request(_request)
 
     if (pid == 0)
     {
+        if(chdir(_request.get_file_root().c_str()))
+        {
+            exit(5);
+        }
         FILE *file = tmpfile();
         if (file == NULL)
         {
@@ -87,14 +91,15 @@ CGI::CGI(Request &_request) : _request(_request)
         rewind(file);
 
         dup2(::fileno(file), 0);
+        // print to stdout
         close(::fileno(file));
 
         dup2(Pfd1[1], 1);
         close(Pfd1[1]);
-
-        if (execve(_av[0], _av, _envToChar(_env)) == -1)
+        if(execve(_av[0], _av, _envToChar(_env)) == -1)
+        {
             exit(5);
-        // _request.set_status_code("200");
+        }
     }
     waitpid(pid, &status, 0);
     status = WEXITSTATUS(status);
@@ -103,6 +108,7 @@ CGI::CGI(Request &_request) : _request(_request)
         this->_request.set_status_code("403");
         return;
     }
+
     if (status == -1)
     {
         _request.set_status_code("403");
@@ -110,6 +116,7 @@ CGI::CGI(Request &_request) : _request(_request)
     }
     
     close(Pfd1[1]);
+    cerr << ("-------------------") << endl;
     while ((ret = read(Pfd1[0], buf, sizeof(buf)) > 0))
     {
         std::vector<std::string> bufs = split(buf, "\r\n");
@@ -152,14 +159,22 @@ void CGI::setEnv()
     _env.push_back("SERVER_PORT=8081");
     _env.push_back("REQUEST_METHOD=" + _request.get_method());
     _env.push_back("CONTENT_TYPE=application/x-www-form-urlencoded");
-    _env.push_back("QUERY_STRING=" + _request.get_query());
+
+    if (_request.get_method() == "POST")
+        _env.push_back("REQUEST_BODY=" + _request.get_body());
+
+    else if (_request.get_method() == "GET")
+        _env.push_back("REQUEST_BODY=" + _request.get_query());
+
     _env.push_back("REDIRECT_STATUS=200");
     _env.push_back("SCRIPT_NAME=" + _request.get_file_root());
     _env.push_back("SCRIPT_FILENAME=" + _request.get_file_path());
-    _env.push_back("CONTENT_LENGTH=" + to_string(body.length()));
+    if (_request.get_method() == "POST")
+        _env.push_back("CONTENT_LENGTH=" + to_string(_request.get_body().length()));
+
     _env.push_back("DOCUMENT_ROOT=" + _request.get_file_root());
-    _env.push_back("HTTP_COOKIE=first_name=amine&last_name=rakibe");
-    // _env.push_back("HTTP_COOKIE=first_name=amine&last_name=rakibe");
+    _env.push_back("HTTP_COOKIE=username=amine1337; password=amrakibe");
+    // _env.push_back("HTTP_COOKIE=" + _request.get_cookie());
 }
 
 bool CGI::isPython()
