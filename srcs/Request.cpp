@@ -744,7 +744,7 @@ std::pair<std::string,std::string> Request::get_cgi()
 void Request::set_response_body(std::string body)
 {
 	this->response_body = body;
-	cout << this->response_body << endl;
+	cout << "body : " << this->response_body << endl;
 }
 
 void Request::set_response_headers(std::string headers)
@@ -754,7 +754,6 @@ void Request::set_response_headers(std::string headers)
 	else {
 		this->response_headers += "\r\n" + headers;
 	}
-	cout << this->response_headers << endl;
 }
 
 void Request::set_status_code(std::string status)
@@ -848,4 +847,9 @@ void Request::join_reponse_parts()
 	this->response += this->status_line; 
 	this->response += this->response_headers;
 	this->response += this->response_body + "\r\n";
+}
+
+std::string Request::get_body()
+{
+	return (this->body);
 }

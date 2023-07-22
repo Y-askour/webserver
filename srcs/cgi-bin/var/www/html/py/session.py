@@ -27,8 +27,7 @@ if not client_cookie.get('session_id'):
     session_id = generat_new_session_id(26)
 
     cookie['session_id'] = session_id
-    cookie['session_id']['expires'] = expires.strftime(
-        "%a, %d-%b-%Y %H:%M:%S PST")
+    cookie['session_id']['expires'] = expires.strftime("%a, %d-%b-%Y %H:%M:%S PST")
     cookie['session_id']['path'] = '/'
     cookie['session_id']['HttpOnly'] = True
 

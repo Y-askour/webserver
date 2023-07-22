@@ -65,6 +65,7 @@ class Request
 		std::string get_method();
 		std::string get_query();
 		std::string get_file_root();
+		std::string get_body();
 
 		std::pair<std::string,std::string> get_cgi(); // first is the path of the script and the second is the extension of the script
 
