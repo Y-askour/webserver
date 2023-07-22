@@ -47,6 +47,7 @@ class Request
 	std::string file_to_read;
 	std::string file_type;
 	std::string file_root;
+	std::string bad_request;
 
 
 
@@ -77,7 +78,8 @@ class Request
 
 		// helpers
 		void split_by_rclt();
-		void remove_spaces(std::string &t);
+		void remove_spaces_at_end(std::string &t);
+		void remove_spaces_at_start(std::string &t);
 		void split_request_line();
 		int check_uri_characters();
 
@@ -110,4 +112,6 @@ class Request
 		void check_index_files(Default_serv *);
 		void check_cgi(Default_serv *,std::string path_with_index);
 		void join_reponse_parts();
+		std::vector<std::string> split(std::string input,char sp);
+		std::string turn_whitespaces_to_space(std::string input);
 };

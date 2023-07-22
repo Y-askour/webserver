@@ -44,7 +44,6 @@ void Request::set_n_bytes(size_t n)
 void Request::split_by_rclt()
 {
 	// getting the request_line 
-
 	size_t request_line_pos = this->request_buf.find("\r\n");
 	if (request_line_pos == this->request_buf.npos)
 		return ;
@@ -82,27 +81,18 @@ void Request::split_by_rclt()
 		std::pair<std::string,std::string> header;
 		int pos = strs[i].find(':');
 		header.first = strs[i].substr(0,pos);
-		this->remove_spaces(header.first);
+		this->remove_spaces_at_end(header.first);
 		strs[i].erase(0,pos + 1);
-		this->remove_spaces(strs[i]);
+		this->remove_spaces_at_end(strs[i]);
 		header.second = strs[i];
 		this->headers.insert(header);
 		i++;
 	}
 }
 
-void Request::remove_spaces(std::string &t)
+void Request::remove_spaces_at_end(std::string &t)
 {
-	// delete space in the beginning
 	std::string::iterator i = t.begin();
-	while (i != t.end() )
-	{
-		if (!std::isspace(*i))
-			break;
-		i++;
-	}
-	t.erase(t.begin(), i);
-
 	// delete spaces in the end
  	i = t.end() - 1;
 	while (i >= t.begin() )
@@ -119,7 +109,7 @@ std::string Request::is_req_well_formed()
 	std::map<std::string, std::string>::iterator it = this->headers.find("Transfer-Encoding");
 	std::map<std::string, std::string>::iterator it1 = this->headers.find("Content-Length");
 
-	if (this->request_line.empty())
+	if (!this->bad_request.compare("1"))
 		return ("400");
 	else if (it != this->headers.end() && it->second.compare("chuncked"))
 		return ("501");
@@ -153,31 +143,22 @@ int Request::check_uri_characters()
 
 void Request::split_request_line()
 {
+	std::vector<std::string> strs;
 	// removes spaces
-	if (this->request_line.empty())
+	if (this->request_line.empty() || (this->request_line[0] == ' '))
+	{
+		this->bad_request = "1";
 		return;
-	this->remove_spaces(this->request_line);
-
-	std::string tmp = this->request_line;
-	size_t i = 0;
-
-	std::string strs[3];
-	int k = 0;
+	}
+	this->remove_spaces_at_end(this->request_line);
 
 	// split the request line parts
-	while (i < tmp.size())
+	strs = this->split(this->request_line,' ');
+	if (strs.size() != 3)
 	{
-		if (std::isspace(tmp[i]))
-		{
-			strs[k] = tmp.substr(0,i);
-			tmp.erase(0,i + 1);
-			i = 0;
-			k++;
-			continue;
-		}
-		i++;
+		this->bad_request = "1";
+		return ;
 	}
-	strs[k] = tmp;
 
 	this->method = strs[0];
 	size_t pos = strs[1].find("?");
@@ -189,6 +170,48 @@ void Request::split_request_line()
 	this->request_uri = strs[1];
 	this->uri = strs[1];
 	this->http_version = strs[2];
+}
+
+std::vector<std::string>    Request::split(std::string input, char sp) {
+    std::vector<std::string>    header;
+
+    for (unsigned long i = input.find(sp); input.length(); i = input.find(sp)) {
+        if (i == std::string::npos) {
+            header.push_back(input.substr(0, input.length()));
+            break ;
+        }
+        header.push_back(input.substr(0, i));
+        while (input.at(i) == sp)
+            i++;
+        input.erase(0, i);
+    }
+    return header;
+}
+
+void remove_spaces_at_start(std::string &str) 
+{
+	// delete spaces in the end
+	std::string::iterator it = str.begin();
+
+	while (it != str.end())
+	{
+		if (!std::isspace(*it))
+			break;
+		else
+		 	str.erase(it);
+		it++;
+	}
+	
+}
+
+std::string Request::turn_whitespaces_to_space(std::string input)
+{
+	for (int	i = 0; input[i]; i++)
+	{
+		if (isspace(input.c_str()[i]))
+			input[i] = ' ';
+	}
+	return input;
 }
 
 void Request::parssing_the_request(char *buf,size_t s)
