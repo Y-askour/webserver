@@ -5,6 +5,7 @@
 #include <shared_mutex>
 #include <sstream>
 #include <string>
+#include <sys/dirent.h>
 #include <sys/stat.h>
 #include <sys/unistd.h>
 #include <unistd.h>
@@ -114,7 +115,7 @@ std::string Request::is_req_well_formed()
 		return ("400");
 	else if (it != this->headers.end() && it->second.compare("chuncked") != 0)
 		return ("501");
-	else if (it == this->headers.end()  && it1 == this->headers.end() && !this->method.compare("POST"))
+	else if (it1 == this->headers.end() && !this->method.compare("POST"))
 		return ("400");
 	else if (!this->check_uri_characters())
 		return ("400");
@@ -254,6 +255,8 @@ void Request::parssing_the_request(char *buf,size_t s)
 					this->DELETE_METHOD(status_location);
 				else 
 				{
+					this->status = "501";
+					this->create_the_response();
 				}
 				// check what method
 				return ;
@@ -310,9 +313,9 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 				}
 			}
 			else {
-				std::vector<std::pair<std::string,std::string> > b = location->get_cgi_info();
-				std::vector<std::pair<std::string,std::string> >::iterator t = b.begin();
-				if (t != b.end())
+				std::vector<std::pair<std::string,std::string> > cgi = location->get_cgi_info();
+				std::vector<std::pair<std::string,std::string> >::iterator t = cgi.begin();
+				if (t != cgi.end())
 					return this->check_cgi(location,this->file_to_read);
 				this->find_type(this->file_to_read);
 				std::cout << this->file_type << std::endl;
@@ -388,14 +391,41 @@ void Request::POST_METHOD(std::pair<Server *,Default_serv *> serv)
 	}
 }
 
-void	Request::DELETE_METHOD(std::pair<Server *, Default_serv *> serv) {
+int Request::delete_all_folder_content()
+{
+	DIR *folder = opendir(this->file_to_read.c_str());
+	if (!folder)
+	{
+		perror("opendir");
+		return 0;
+	}
+	struct dirent *entry;
+	while ((entry = readdir(folder)))
+	{
+		std::string file_name = entry->d_name;
+		std::string path = this->file_to_read  + "/" + entry->d_name ;
+		if (file_name.compare("..") && file_name.compare("."))
+		{
+	   		if (std::remove(path.c_str()))
+	   		{
+	   			closedir(folder);
+	   			return 1;
+	   		}
+		}
+	}
+	closedir(folder);
+	return 0;
+}
+
+void	Request::DELETE_METHOD(std::pair<Server *, Default_serv *> serv)
+{
 	Default_serv	*location;
-	std::string	hld;
+	if (serv.second)
+		location = serv.second;
+	else
+		location = serv.first;
 
-	hld = this->get_requested_resource(serv, &location);
-	std::cout << hld << std::endl;
-	//exit(1);
-
+	this->get_requested_resource(serv, &location);
 
 	int ret = access(this->file_to_read.c_str(),R_OK);
 
@@ -403,6 +433,59 @@ void	Request::DELETE_METHOD(std::pair<Server *, Default_serv *> serv) {
 	{
 		this->status = "404";
 		this->create_the_response();
+	}
+	else
+	{
+		struct stat buf;
+		if (!stat(file_to_read.c_str(),&buf))
+		{
+			if (S_ISDIR(buf.st_mode)) // directory
+			{
+				if (this->request_uri[this->request_uri.size() - 1] == '/')
+				{
+					std::vector<std::pair<std::string,std::string> > b = location->get_cgi_info();
+					if (b.size() > 0)
+						this->check_index_files(location);
+					else
+					{
+						int check = this->delete_all_folder_content();
+						if (!check)
+						{
+							this->status = "204";
+							this->create_the_response();
+							return ;
+						}
+						else
+						{
+							this->status = "403";
+							this->create_the_response();
+						}
+					}
+				}
+				else
+				{
+					this->status = "409";
+					this->create_the_response();
+				}
+
+			}
+			else // file
+			{
+				std::vector<std::pair<std::string,std::string> > b = location->get_cgi_info();
+				std::vector<std::pair<std::string,std::string> >::iterator t = b.begin();
+				if (t != b.end())
+					return this->check_cgi(location,this->file_to_read);
+				else if (std::remove(this->file_to_read.c_str()))
+				{
+					this->status = "403";
+					this->create_the_response();
+	   				return ;
+				}
+				this->status = "204";
+				this->create_the_response();
+			}
+		}
+
 	}
 }
 
@@ -591,7 +674,7 @@ void Request::fill_status_line()
 
 void Request::fill_body(int status)
 {
-	if (status >=  300)
+	if ( status == 204 || status >=  300)
 	{
 		// getting the html and fill the body
 		this->file_type = "text/html";

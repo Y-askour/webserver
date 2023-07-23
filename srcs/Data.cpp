@@ -128,7 +128,7 @@ void Data::run_server()
 					//std::cout << c->get_server().get_root() << std::endl;
 					Request *younes = this->get_request_by_fd(this->test[i].fd);
 
-					char buf[10000];
+					char buf[1024];
 					ssize_t s = recv(this->test[i].fd,buf,1000000,0);
 					if (!s)
 					{

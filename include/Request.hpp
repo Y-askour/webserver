@@ -115,4 +115,6 @@ class Request
 		void join_reponse_parts();
 		std::vector<std::string> split(std::string input,char sp);
 		std::string turn_whitespaces_to_space(std::string input);
+		int delete_all_folder_content();
+
 };
