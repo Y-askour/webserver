@@ -106,26 +106,25 @@ void Request::remove_spaces_at_end(std::string &t)
 	t.erase(i + 1,t.end());
 }
 
-std::string Request::is_req_well_formed()
+void	Request::is_req_well_formed()
 {
 	std::map<std::string, std::string>::iterator it = this->headers.find("Transfer-Encoding");
 	std::map<std::string, std::string>::iterator it1 = this->headers.find("Content-Length");
 
-	if (!this->bad_request.compare("1"))
-		return ("400");
-	else if (it != this->headers.end() && it->second.compare("chuncked") != 0)
-		return ("501");
-	else if (it1 == this->headers.end() && !this->method.compare("POST"))
-		return ("400");
-	else if (!this->check_uri_characters())
-		return ("400");
-	else if (this->uri.size() > 2048)
-		return ("414");
-	else if (this->body.size() > (size_t)std::stoi(this->server->get_client_max_body_size()))
-		return ("413");
-	else if (this->http_version.compare("HTTP/1.1"))
-			return ("505");
-	return ("");
+	//if (!this->bad_request.compare("1"))
+	//	return ("400");
+	if (it != this->headers.end() && it->second.compare("chuncked") != 0)
+		throw ("501");
+	else if (it == this->headers.end() && it1 == this->headers.end() && !this->method.compare("POST"))
+		throw ("400");
+	//this one is wrong 
+	//else if (!this->check_uri_characters())
+	//	return ("400");
+	//else if (this->uri.size() > 2048)
+	//	return ("414");
+	//else if (this->http_version.compare("HTTP/1.1"))
+	//		return ("505");
+	//return ("");
 }
 
 int Request::check_uri_characters()
@@ -214,14 +213,156 @@ std::string Request::turn_whitespaces_to_space(std::string input)
 	return input;
 }
 
+//parsing request func
+
+bool	Request::check_uri_character(char c) {
+	std::string	allow = URI;
+	if (allow.find(c) == std::string::npos)
+		return 1;
+	return 0;
+}
+
+void	Request::parse_request_line(void) {
+	std::vector<std::string>	req;
+	unsigned long	pos;
+	std::string	hld;
+
+	pos = this->request_buf.find('\n');
+	hld = this->request_buf.substr(0, pos);
+	this->request_buf.erase(0, pos + 1);
+	if (hld.back() == '\r')
+		hld.erase(hld.length() - 1);
+	while (hld.back() == ' ')
+		hld.erase(hld.length() - 1);
+	if (hld.at(0) == ' ')
+		throw "400";
+	req = this->split(hld, ' ');
+	if (req.size() > 3)
+		throw "400";
+	this->method = req.at(0);
+	//here take off the query ?ll=lll
+	pos = (req.at(1).find('?') != req.at(1).npos) ? req.at(1).find('?') : req.at(1).length();
+	this->uri = req.at(1).substr(0, pos);
+	req.at(1).erase(0, ((req.at(1)[pos] == '?') ? pos + 1 : pos));
+
+	this->query = req.at(1).substr(0, req.at(1).length());
+	//if (req.at(1).find('?') != req.at(1).npos)
+	//	this->query = req.at(1).substr(pos + 1, req.at(1).length());
+	//else
+	//	this->query = "";
+	std::cout << this->query << std::endl;
+	//this->query = (pos != std::string::npos) ? req.at(1).substr(pos + 1, req.at(1).length()) : "";
+	this->http_version = req.at(2);
+	//check if method is correct
+	if (this->method.compare("GET") && this->method.compare("POST") && this->method.compare("DELETE"))
+		throw "400";
+	//here check url uncoding if character is right
+	if (this->uri.front() != '/')
+		throw "400";
+	if (this->uri.length() > 2048)
+		throw "414";
+	//here also check ? and save the query of the uri
+	for (std::string::iterator itr = this->uri.begin(); itr != this->uri.end(); itr++) {
+		if (check_uri_character(*itr))
+			throw "400";
+	}
+	//here youness should check if http/1.1
+	if (this->http_version.compare("HTTP/1.1"))
+		throw "400";
+	std::cout << "ok"<< std::endl;
+}
+
+void	Request::check_header_variables(void) {
+	std::map<std::string, std::string>::iterator	itr = this->headers.find("Transfer-Encoding");
+	std::map<std::string, std::string>::iterator	itr2 = this->headers.find("Content-Length");
+
+	if (itr != this->headers.end() && itr->second.compare("chuncked"))
+		throw "501";
+	if (!this->method.compare("POST") && \
+			(itr == this->headers.end() || itr2 == this->headers.end()))
+		throw "400";
+}
+
+std::string	Request::substr_sp(std::string path, char sp) {
+	int	i;
+	int	j;
+
+	for (i = 0; (path.at(i) == sp && path.at(i)); i++)
+		;
+	for (j = static_cast<int>(path.length() - 1); (path.at(j) == sp && path.at(j)); j--)
+		;
+	return (path.substr(i, (j - i) + 1));
+}
+
+void	Request::parse_header(void) {
+	std::vector<std::string>	header;
+	std::string	hld;
+	int	check = 0;
+	unsigned long find;
+
+	for (find = this->request_buf.find('\n'); !this->request_buf.empty(); find = this->request_buf.find('\n')) {
+		hld = this->request_buf.substr(0, find + 1);
+		if ((hld.length() == 2 && hld.at(0) == '\r') || hld.length() == 1) {
+			this->request_buf.erase(0, find + 1);
+			check = 1;
+			break ;
+		}
+		header.push_back(hld);
+		this->request_buf.erase(0, find + 1);
+	}
+	if (!check)
+		throw "400";
+	for (std::vector<std::string>::iterator	itr = header.begin(); itr != header.end(); itr++) {
+		find = itr->find(':');
+		if (find == std::string::npos)
+			throw "400";
+		itr->erase(itr->length() - 1);
+		if (itr->back() == '\r')
+			itr->erase(itr->length() - 1);
+		//std::pair<std::string, std::string>	var(itr->substr(0, find), itr->substr(find + 1, itr->length() - 1));
+		std::pair<std::string, std::string>	var(itr->substr(0, find), \
+				this->substr_sp(itr->substr(find + 1, itr->length() - 1), ' '));
+		for (std::string::iterator i = var.first.begin(); i != var.first.end(); i++) {
+			if (isspace(*i))
+				throw "400";
+		}
+		this->headers.insert(var);
+	}
+	//here check
+	this->check_header_variables();
+}
+
+void	Request::parse_body(void) {
+	this->body = this->request_buf;
+	//this one is wrong is younes
+	//if (this->body.size() > (size_t)std::stoi(this->server->get_client_max_body_size()))
+	//	throw ("413");
+	//this one have a problem maybe the size will be long i need to check it in the parsing atoi will not do the job
+	if (static_cast<int>(this->body.length()) > atoi(server->get_client_max_body_size().c_str()))
+		throw "413";
+}
+
 void Request::parssing_the_request(char *buf,size_t s)
 {
 	// spliting the request
-	this->set_request_buf(buf);
-	this->set_n_bytes(s);
-	this->split_by_rclt();
-	this->split_request_line();
-	this->status = this->is_req_well_formed();
+	//this->set_request_buf(buf);
+	//this->set_n_bytes(s);
+	//this->split_by_rclt();
+	//this->split_request_line();
+	//this->status = this->is_req_well_formed();
+
+	//hicham code
+	try {
+		this->set_request_buf(buf);
+		this->set_n_bytes(s);
+		this->parse_request_line();
+		this->parse_header();
+		this->parse_body();
+		//this->is_req_well_formed();
+	}
+	catch (const char *status) {
+		this->status = status;
+	}
 	// request flow 
 	if (status.empty())
 	{
