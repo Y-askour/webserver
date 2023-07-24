@@ -39,9 +39,8 @@ int Request::get_fd()
 
 void Request::set_request_buf(std::string buf)
 {
-	this->request_buf = "";
-	for (size_t i = 0; i < this->n_bytes ; i++)
-		this->request_buf.push_back(buf[i]);
+	this->request_buf.clear();
+	this->request_buf.append(buf);
 }
 
 void Request::set_n_bytes(size_t n)
@@ -813,7 +812,6 @@ void Request::fill_body(int status)
 	}
 }
 
-
 std::pair<Server *,Default_serv *> Request::get_matched_location_for_request()
 {
 	std::map<std::string, Location *> l = this->server->get_location();
@@ -893,7 +891,6 @@ std::string Request::is_method_allowed_in_location(Default_serv *location)
 	return "405";
 }
 
-
 void Request::create_the_response()
 {
 	this->fill_status_line();
@@ -904,7 +901,6 @@ void Request::create_the_response()
 	this->response += this->response_headers;
 	this->response += this->response_body + "\r\n";
 }
-
 
 std::string Request::get_file_path()
 {
@@ -931,10 +927,20 @@ std::pair<std::string,std::string> Request::get_cgi()
 	return (this->cgi);
 }
 
+std::string Request::get_body()
+{
+	return (this->body);
+}
+
+string 	Request::getHeader(string key)
+{
+	return this->headers[key];
+}
+
 void Request::set_response_body(std::string body)
 {
 	this->response_body = body;
-	cout << "body : " << this->response_body << endl;
+	cout << "body: "<< body << endl;
 }
 
 void Request::set_response_headers(std::string headers)
@@ -1037,11 +1043,6 @@ void Request::join_reponse_parts()
 	this->response += this->status_line; 
 	this->response += this->response_headers;
 	this->response += this->response_body + "\r\n";
-}
-
-std::string Request::get_body()
-{
-	return (this->body);
 }
 
 size_t Request::get_request_stat()

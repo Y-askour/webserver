@@ -18,8 +18,6 @@ vector<string> CGI::split(string line, std::string delimiter)
     return (v);
 }
 
-string body = "username=amrakibe&password=amine1337";
-
 CGI::CGI(CGI const &other) : _request(other._request)
 {
     *this = other;
@@ -87,11 +85,10 @@ CGI::CGI(Request &_request) : _request(_request)
             return;
         }
 
-        fputs(body.c_str(), file);
+        fputs(_request.get_body().c_str(), file);
         rewind(file);
 
         dup2(::fileno(file), 0);
-        // print to stdout
         close(::fileno(file));
 
         dup2(Pfd1[1], 1);
@@ -116,7 +113,6 @@ CGI::CGI(Request &_request) : _request(_request)
     }
     
     close(Pfd1[1]);
-    cerr << ("-------------------") << endl;
     while ((ret = read(Pfd1[0], buf, sizeof(buf)) > 0))
     {
         std::vector<std::string> bufs = split(buf, "\r\n");
@@ -152,29 +148,24 @@ void CGI::setEnv()
 {
     _env.push_back("PATH_INFO=" + _request.get_file_path());
     _env.push_back("SERVER_SOFTWARE=webserv/1.0");
-    _env.push_back("REMOTE_PORT=8080");
+    _env.push_back("REMOTE_PORT=" +  to_string(_request.get_server().get_listen()[0]));
+    cout << "REMOTE_PORT=" +  to_string(_request.get_server().get_listen()[0]) << endl;
+    _env.push_back("SERVR_NAME=" + this->_request.get_server().get_server_name()[0]);
+    cout << "SERVR_NAME=" + this->_request.get_server().get_server_name()[0] << endl;
     _env.push_back("SERVR_NAME=localhost");
     _env.push_back("GATEWAY_INTERFACE=CGI/1.1");
     _env.push_back("SERVER_PROTOCOL=HTTP/1.1");
-    _env.push_back("SERVER_PORT=8081");
+    _env.push_back("SERVER_PORT=" +  to_string(_request.get_server().get_listen()[0]));
     _env.push_back("REQUEST_METHOD=" + _request.get_method());
-    _env.push_back("CONTENT_TYPE=application/x-www-form-urlencoded");
-
-    if (_request.get_method() == "POST")
-        _env.push_back("REQUEST_BODY=" + _request.get_body());
-
-    else if (_request.get_method() == "GET")
-        _env.push_back("REQUEST_BODY=" + _request.get_query());
-
+    _env.push_back("CONTENT_TYPE=" + _request.getHeader("Content-Type:"));
+    _env.push_back("QUERY_STRING=" + _request.get_query());
     _env.push_back("REDIRECT_STATUS=200");
     _env.push_back("SCRIPT_NAME=" + _request.get_file_root());
     _env.push_back("SCRIPT_FILENAME=" + _request.get_file_path());
-    if (_request.get_method() == "POST")
-        _env.push_back("CONTENT_LENGTH=" + to_string(_request.get_body().length()));
-
+    _env.push_back("CONTENT_LENGTH=" + to_string(_request.get_body().length()));
     _env.push_back("DOCUMENT_ROOT=" + _request.get_file_root());
-    _env.push_back("HTTP_COOKIE=username=amine1337; password=amrakibe");
-    // _env.push_back("HTTP_COOKIE=" + _request.get_cookie());
+    _env.push_back("HTTP_COOKIE=" + _request.getHeader("Cookie"));
+    _env.push_back("UPLOAD_DIR=" + _request.get_server().get_root() + "/upload");
 }
 
 bool CGI::isPython()
