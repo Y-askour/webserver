@@ -1,5 +1,6 @@
 #include "../include/Request.hpp"
 #include <cctype>
+#include <cstdlib>
 #include <fstream>
 #include <iterator>
 #include <ostream>
@@ -39,7 +40,7 @@ int Request::get_fd()
 
 void Request::set_request_buf(std::string buf)
 {
-	this->request_buf = "";
+	this->request_buf.clear();
 	for (size_t i = 0; i < this->n_bytes ; i++)
 		this->request_buf.push_back(buf[i]);
 }
@@ -53,6 +54,7 @@ void Request::set_n_bytes(size_t n)
 void Request::remove_spaces_at_end(std::string &t)
 {
 	std::string::iterator i = t.begin();
+
 	// delete spaces in the end
  	i = t.end() - 1;
 	while (i >= t.begin() )
@@ -69,20 +71,10 @@ void	Request::is_req_well_formed()
 	std::map<std::string, std::string>::iterator it = this->headers.find("Transfer-Encoding");
 	std::map<std::string, std::string>::iterator it1 = this->headers.find("Content-Length");
 
-	//if (!this->bad_request.compare("1"))
-	//	return ("400");
 	if (it != this->headers.end() && it->second.compare("chuncked") != 0)
 		throw ("501");
 	else if (it == this->headers.end() && it1 == this->headers.end() && !this->method.compare("POST"))
 		throw ("400");
-	//this one is wrong 
-	//else if (!this->check_uri_characters())
-	//	return ("400");
-	//else if (this->uri.size() > 2048)
-	//	return ("414");
-	//else if (this->http_version.compare("HTTP/1.1"))
-	//		return ("505");
-	//return ("");
 }
 
 int Request::check_uri_characters()
@@ -744,7 +736,7 @@ void Request::fill_headers()
 
 void Request::fill_status_line()
 {
-	int status_code = std::stoi(this->status);
+	int status_code = std::atoi(this->status.c_str());
 	this->status_line = "HTTP/1.1 " + this->status + " ";
 	// 200
 	if (status_code == 200)
@@ -897,7 +889,7 @@ std::string Request::is_method_allowed_in_location(Default_serv *location)
 void Request::create_the_response()
 {
 	this->fill_status_line();
-	this->fill_body(std::stoi(this->status));
+	this->fill_body(std::atoi(this->status.c_str()));
 	this->fill_headers();
 	this->response = "";
 	this->response += this->status_line; 
