@@ -320,7 +320,10 @@ void Request::parssing_the_request(std::string buf,size_t s)
 		//this->is_req_well_formed();
 	}
 	catch (const char *status) {
+		this->request_stat = 2;
 		this->status = status;
+		this->create_the_response();
+		return ;
 	}
 	// request flow 
 	if (status.empty())
@@ -373,7 +376,7 @@ void Request::parssing_the_request(std::string buf,size_t s)
 		this->create_the_response();
 		return ;
 	}
-	this->create_the_response();
+	//this->create_the_response();
 }
 
 void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
