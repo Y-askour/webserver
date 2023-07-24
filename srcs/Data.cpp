@@ -12,6 +12,7 @@ Data::Data(const Data & obj)
 {
 	this->mime_types_parse = obj.mime_types_parse;
 	this->servers = obj.servers;
+	this->check = 0;
 	this->create_listen_sockets();
 	this->run_server();
 }
@@ -128,8 +129,10 @@ void Data::run_server()
 					Request *younes = this->get_request_by_fd(this->test[i].fd);
 
 					char buf[1024];
-					ssize_t s = recv(this->test[i].fd,buf,1000000,0);
-					if (!s)
+					std::string request;
+				
+					size_t s = recv(this->test[i].fd,buf,1024,0);
+					if (s < 0)
 					{
 						close(this->test[i].fd);
 						this->delete_request(this->test[i].fd);
@@ -137,10 +140,15 @@ void Data::run_server()
 						continue;
 					}
 					buf[s] = 0;
-					//std::cout << buf << std::endl;
-
-					younes->parssing_the_request(buf,s);
-					this->test[i].events = POLLOUT;
+					if (!this->check) {
+						request.append(buf);
+						if (this->check_is_headers_done(request))
+							younes->parssing_the_request(request, s);
+					}
+					else
+						younes->parssing_the_request(buf, s);
+					if (younes->get_request_stat() == 2)
+						this->test[i].events = POLLOUT;
 				}
 			}
 			else if (this->test[i].revents & POLLOUT)
@@ -225,5 +233,25 @@ bool Data::is_a_connection(int fd)
 		if (this->connections[i].get_fd() == fd)
 			return (1);
 	}
+	return 0;
+}
+
+int Data::check_is_headers_done(std::string request)
+{
+	//std::stringng hld;
+
+	//for (size_t i = request.rfind('\n'); i != request.npos; i = request.rfind('\n')) {
+	//	hld = request.substr();
+	//	if (i >= 2) {
+	//		if (request[i] == '')
+	//	}
+	//}
+
+	if ( (request.find("\n\r\n") != request.npos) || (request.find("\n\n") != request.npos))
+	{
+		this->check  = 1;
+		return 1;
+	}
+
 	return 0;
 }

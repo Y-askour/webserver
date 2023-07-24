@@ -16,6 +16,7 @@ class Request
 	Server* server;
 	std::string request_buf;
 	size_t n_bytes;
+	size_t request_stat;
 
 	// request
 	std::string request_line;
@@ -72,7 +73,7 @@ class Request
 
 
 		// setters
-		void set_request_buf(char *buf);
+		void set_request_buf(std::string buf);
 		void set_n_bytes(size_t n);
 		void set_response_body(std::string body);
 		void set_response_headers(std::string headers);
@@ -86,7 +87,7 @@ class Request
 		int check_uri_characters();
 
 		// create response
-		void	parssing_the_request(char *buf,size_t s);
+		void	parssing_the_request(std::string buf,size_t s);
 		void	is_req_well_formed();
 		std::pair<Server *,Default_serv *> get_matched_location_for_request();
 		std::pair<int,std::string> is_Location_have_redirection(Default_serv * location);
@@ -125,5 +126,6 @@ class Request
 		std::vector<std::string> split(std::string input,char sp);
 		std::string turn_whitespaces_to_space(std::string input);
 		int delete_all_folder_content();
+		size_t get_request_stat();
 
 };

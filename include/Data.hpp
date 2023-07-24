@@ -17,6 +17,8 @@
 class Data
 {
 	protected :
+	size_t check;
+
 	std::map<std::string, std::string>	mime_types_parse;
 
 	// all fds that are listening
@@ -53,4 +55,5 @@ class Data
 		Request *get_request_by_fd(int fd);
 		void delete_request(int fd);
 		bool is_a_connection(int fd);
+		int check_is_headers_done(std::string request);
 };

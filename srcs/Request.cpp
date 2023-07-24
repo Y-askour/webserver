@@ -1,10 +1,12 @@
 #include "../include/Request.hpp"
 #include <cctype>
 #include <fstream>
+#include <iterator>
 #include <ostream>
 #include <shared_mutex>
 #include <sstream>
 #include <string>
+#include <sys/_types/_size_t.h>
 #include <sys/dirent.h>
 #include <sys/stat.h>
 #include <sys/unistd.h>
@@ -13,9 +15,12 @@
 #include "../include/cgi.hpp"
 
 Request::Request(Connection &other,int fd,std::map<std::string,std::string> mime)
-{ this->server = &(other.get_server());
+{
+	this->server = &(other.get_server());
 	this->fd = fd;
 	this->mime_types = mime;
+	this->request_stat  = 0;
+	this->n_bytes = 0;
 }
 
 Request::~Request()
@@ -32,65 +37,18 @@ int Request::get_fd()
 	return this->fd;
 }
 
-void Request::set_request_buf(char *buf)
+void Request::set_request_buf(std::string buf)
 {
-	this->request_buf = buf;
+	this->request_buf = "";
+	for (size_t i = 0; i < this->n_bytes ; i++)
+		this->request_buf.push_back(buf[i]);
 }
 
 void Request::set_n_bytes(size_t n)
 {
-	this->n_bytes = n;
+	this->n_bytes += n;
 }
 
-void Request::split_by_rclt()
-{
-	// getting the request_line 
-	size_t request_line_pos = this->request_buf.find("\r\n");
-	if (request_line_pos == this->request_buf.npos)
-		return ;
-
-	this->request_line = this->request_buf.substr(0,request_line_pos);
-	this->request_buf.erase(0,request_line_pos+2);
-
-	// getting the body
-	size_t body_pos = this->request_buf.find("\r\n\r\n");
-	if (body_pos == this->request_buf.npos)
-		return ;
-
-	this->body = this->request_buf.substr(body_pos + 4,this->request_buf.npos);
-	this->request_buf.erase(body_pos + 4, this->request_buf.npos);
-
-	// getting the headers
-	std::vector<std::string> strs;
-	size_t pos = 0;	
-
-	while ((pos = this->request_buf.find("\r\n") ) != this->request_buf.npos) {
-		if (pos == this->request_buf.npos)
-			return ;
-		strs.push_back(this->request_buf.substr(0,pos));
-		this->request_buf.erase(0,pos+2);
-	}
-	// spliting headers and putting it in the private member headrs
-	size_t i  = 0;
-	while (i < strs.size())
-	{
-		if (strs[i].empty())
-		{
-			strs.erase(strs.begin() + i);
-			continue;
-		}
-		std::pair<std::string,std::string> header;
-		int pos = strs[i].find(':');
-		header.first = strs[i].substr(0,pos);
-		this->remove_spaces_at_end(header.first);
-		strs[i].erase(0,pos + 1);
-		this->remove_spaces_at_start(strs[i]);
-		this->remove_spaces_at_end(strs[i]);
-		header.second = strs[i];
-		this->headers.insert(header);
-		i++;
-	}
-}
 
 void Request::remove_spaces_at_end(std::string &t)
 {
@@ -251,7 +209,6 @@ void	Request::parse_request_line(void) {
 	//	this->query = req.at(1).substr(pos + 1, req.at(1).length());
 	//else
 	//	this->query = "";
-	std::cout << this->query << std::endl;
 	//this->query = (pos != std::string::npos) ? req.at(1).substr(pos + 1, req.at(1).length()) : "";
 	this->http_version = req.at(2);
 	//check if method is correct
@@ -270,7 +227,7 @@ void	Request::parse_request_line(void) {
 	//here youness should check if http/1.1
 	if (this->http_version.compare("HTTP/1.1"))
 		throw "400";
-	std::cout << "ok"<< std::endl;
+
 }
 
 void	Request::check_header_variables(void) {
@@ -333,7 +290,18 @@ void	Request::parse_header(void) {
 }
 
 void	Request::parse_body(void) {
-	this->body = this->request_buf;
+	std::map<std::string, std::string>::iterator itr = this->headers.find("Content-Length");
+	if (this->method.compare("GET") == 0)
+	{
+		this->body = this->request_buf;
+		this->request_stat = 2;
+	}
+	else if (itr != this->headers.end())
+	{
+		this->body.append(this->request_buf);
+		if ((size_t)(std::atoi(itr->second.c_str())) <= this->body.size())
+			this->request_stat = 2;
+	}
 	//this one is wrong is younes
 	//if (this->body.size() > (size_t)std::stoi(this->server->get_client_max_body_size()))
 	//	throw ("413");
@@ -342,15 +310,21 @@ void	Request::parse_body(void) {
 		throw "413";
 }
 
-void Request::parssing_the_request(char *buf,size_t s)
+void Request::parssing_the_request(std::string buf,size_t s)
 {
 	//hicham code
 	try {
-		this->set_request_buf(buf);
 		this->set_n_bytes(s);
-		this->parse_request_line();
-		this->parse_header();
+		this->set_request_buf(buf);
+		if (!this->request_stat) 
+		{
+			this->parse_request_line();
+			this->parse_header();
+			this->request_stat = 1;
+		}
 		this->parse_body();
+		if (this->request_stat != 2)
+			return ;
 		//this->is_req_well_formed();
 	}
 	catch (const char *status) {
@@ -1068,4 +1042,9 @@ void Request::join_reponse_parts()
 std::string Request::get_body()
 {
 	return (this->body);
+}
+
+size_t Request::get_request_stat()
+{
+	return this->request_stat;
 }
