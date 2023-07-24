@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/16 19:10:28 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/21 16:05:05 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/07/24 22:05:24 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 //this one for the server
 Default_serv::Default_serv(void)
 {
-	//std::cout << "Defautl_serv constructer" << std::endl;
 	this->listen.push_back(8080);
 	//this->index.push_back("index.html");
 	this->server_name.push_back("localhost");
@@ -297,5 +296,4 @@ std::vector<std::pair<int, std::string> >	Default_serv::get_retur(void) const
 
 Default_serv::~Default_serv(void)
 {
-	std::cout << "Default_serv default destructer." << std::endl;
 }

@@ -2,7 +2,6 @@
 
 Location::Location(void) : Default_serv(0)
 {
-	//std::cout << "location constructer" << std::endl;
 }
 
 Location::Location(Default_serv const &obj)
@@ -27,5 +26,6 @@ Location & Location::operator=(Default_serv const & obj)
 	return (*this);
 }
 
-Location::~Location(void) {//std::cout << "location destructer" << std::endl;
+Location::~Location(void) 
+{
 }

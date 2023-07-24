@@ -49,7 +49,6 @@ class Data
 		//setters
 		void create_listen_sockets();
 		void run_server();
-		int get_number_of_clients();
 		Server *get_server_by_fd(int fd);
 		Connection *get_connection_by_fd(int fd);
 		Request *get_request_by_fd(int fd);

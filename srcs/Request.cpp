@@ -50,79 +50,6 @@ void Request::set_n_bytes(size_t n)
 	this->n_bytes += n;
 }
 
-
-void Request::remove_spaces_at_end(std::string &t)
-{
-	std::string::iterator i = t.begin();
-
-	// delete spaces in the end
- 	i = t.end() - 1;
-	while (i >= t.begin() )
-	{
-		if (!std::isspace(*i))
-			break;
-		i--;
-	}
-	t.erase(i + 1,t.end());
-}
-
-void	Request::is_req_well_formed()
-{
-	std::map<std::string, std::string>::iterator it = this->headers.find("Transfer-Encoding");
-	std::map<std::string, std::string>::iterator it1 = this->headers.find("Content-Length");
-
-	if (it != this->headers.end() && it->second.compare("chuncked") != 0)
-		throw ("501");
-	else if (it == this->headers.end() && it1 == this->headers.end() && !this->method.compare("POST"))
-		throw ("400");
-}
-
-int Request::check_uri_characters()
-{
-	std::string allowed_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=%";
-
-	std::string::iterator it = this->uri.begin();
-
-	while (it != this->uri.end())
-	{
-		if (allowed_chars.find(*it) == allowed_chars.npos)
-			return (0);
-		it++;
-	}
-	return (1);
-}
-
-void Request::split_request_line()
-{
-	std::vector<std::string> strs;
-	// removes spaces
-	if (this->request_line.empty() || (this->request_line[0] == ' '))
-	{
-		this->bad_request = "1";
-		return;
-	}
-	this->remove_spaces_at_end(this->request_line);
-
-	// split the request line parts
-	strs = this->split(this->request_line,' ');
-	if (strs.size() != 3)
-	{
-		this->bad_request = "1";
-		return ;
-	}
-
-	this->method = strs[0];
-	size_t pos = strs[1].find("?");
-	if (pos != strs[1].npos)
-	{
-		this->query = strs[1].substr(pos + 1);
-		strs[1].erase(pos,strs[1].npos);
-	}
-	this->request_uri = strs[1];
-	this->uri = strs[1];
-	this->http_version = strs[2];
-}
-
 std::vector<std::string>    Request::split(std::string input, char sp) {
     std::vector<std::string>    header;
 
@@ -137,30 +64,6 @@ std::vector<std::string>    Request::split(std::string input, char sp) {
         input.erase(0, i);
     }
     return header;
-}
-
-void Request::remove_spaces_at_start(std::string &str) 
-{
-	std::string::iterator it = str.begin();
-
-	while (it != str.end())
-	{
-		if (!std::isspace(*it))
-			break;
-		else
-		 	str.erase(it);
-		it++;
-	}
-}
-
-std::string Request::turn_whitespaces_to_space(std::string input)
-{
-	for (int	i = 0; input[i]; i++)
-	{
-		if (isspace(input.c_str()[i]))
-			input[i] = ' ';
-	}
-	return input;
 }
 
 //parsing request func
@@ -268,7 +171,6 @@ void	Request::parse_header(void) {
 		itr->erase(itr->length() - 1);
 		if (itr->back() == '\r')
 			itr->erase(itr->length() - 1);
-		//std::pair<std::string, std::string>	var(itr->substr(0, find), itr->substr(find + 1, itr->length() - 1));
 		std::pair<std::string, std::string>	var(itr->substr(0, find), \
 				this->substr_sp(itr->substr(find + 1, itr->length() - 1), ' '));
 		for (std::string::iterator i = var.first.begin(); i != var.first.end(); i++) {
@@ -277,7 +179,6 @@ void	Request::parse_header(void) {
 		}
 		this->headers.insert(var);
 	}
-	//here check
 	this->check_header_variables();
 }
 
@@ -294,9 +195,6 @@ void	Request::parse_body(void) {
 		if ((size_t)(std::atoi(itr->second.c_str())) <= this->body.size())
 			this->request_stat = 2;
 	}
-	//this one is wrong is younes
-	//if (this->body.size() > (size_t)std::stoi(this->server->get_client_max_body_size()))
-	//	throw ("413");
 	//this one have a problem maybe the size will be long i need to check it in the parsing atoi will not do the job
 	if (static_cast<int>(this->body.length()) > atoi(server->get_client_max_body_size().c_str()))
 		throw "413";
@@ -317,7 +215,6 @@ void Request::parssing_the_request(std::string buf,size_t s)
 		this->parse_body();
 		if (this->request_stat != 2)
 			return ;
-		//this->is_req_well_formed();
 	}
 	catch (const char *status) {
 		this->request_stat = 2;
@@ -349,7 +246,6 @@ void Request::parssing_the_request(std::string buf,size_t s)
 			this->status = this->is_method_allowed_in_location(location);
 			if (status.empty())
 			{
-				//std::cout << this->method << std::endl;
 				if (this->method.compare("GET") == 0)
 					this->GET_METHOD(status_location);
 				else if (this->method.compare("POST") == 0)
@@ -421,7 +317,6 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 				if (t != cgi.end())
 					return this->check_cgi(location,this->file_to_read);
 				this->find_type(this->file_to_read);
-				std::cout << this->file_type << std::endl;
 				this->status = "200";
 				this->create_the_response();
 			}
@@ -629,7 +524,6 @@ std::string Request::get_requested_resource(std::pair<Server *,Default_serv *> s
 
 void Request::create_auto_index()
 {
-	//std::cout <<  this->file_to_read << std::endl;
 	std::string auto_index = "<html><head><title>index</title></head><body><ul>";
 
 
@@ -929,7 +823,6 @@ std::pair<std::string,std::string> Request::get_cgi()
 void Request::set_response_body(std::string body)
 {
 	this->response_body = body;
-	cout << "body : " << this->response_body << endl;
 }
 
 void Request::set_response_headers(std::string headers)
