@@ -112,7 +112,6 @@ void Data::run_server()
 
 					if (client_fd < 0)
 					{
-						//while (1);
 						perror("webserv(accept)");
 						return ;
 					}

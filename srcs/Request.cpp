@@ -243,6 +243,7 @@ void	Request::parse_request_line(void) {
 	//here take off the query ?ll=lll
 	pos = (req.at(1).find('?') != req.at(1).npos) ? req.at(1).find('?') : req.at(1).length();
 	this->uri = req.at(1).substr(0, pos);
+	this->request_uri = req.at(1).substr(0, pos);
 	req.at(1).erase(0, ((req.at(1)[pos] == '?') ? pos + 1 : pos));
 
 	this->query = req.at(1).substr(0, req.at(1).length());
@@ -278,19 +279,18 @@ void	Request::check_header_variables(void) {
 
 	if (itr != this->headers.end() && itr->second.compare("chuncked"))
 		throw "501";
-	if (!this->method.compare("POST") && \
-			(itr == this->headers.end() || itr2 == this->headers.end()))
+	if (!this->method.compare("POST") && itr2 == this->headers.end())
 		throw "400";
 }
 
 std::string	Request::substr_sp(std::string path, char sp) {
-	int	i;
-	int	j;
+	size_t	i;
+	size_t	j;
 
-	for (i = 0; (path.at(i) == sp && path.at(i)); i++)
-		;
-	for (j = static_cast<int>(path.length() - 1); (path.at(j) == sp && path.at(j)); j--)
-		;
+	for (i = 0; (i < (path.length() -1) && path.at(i) == sp);)
+		i++;
+	for (j = (path.length() - 1); ( (path.length() -1) && path.at(j) == sp);)
+		j--;
 	return (path.substr(i, (j - i) + 1));
 }
 
@@ -344,13 +344,6 @@ void	Request::parse_body(void) {
 
 void Request::parssing_the_request(char *buf,size_t s)
 {
-	// spliting the request
-	//this->set_request_buf(buf);
-	//this->set_n_bytes(s);
-	//this->split_by_rclt();
-	//this->split_request_line();
-	//this->status = this->is_req_well_formed();
-
 	//hicham code
 	try {
 		this->set_request_buf(buf);
