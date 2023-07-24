@@ -5,6 +5,7 @@
 #include <string>
 #include <unistd.h>
 #include <sys/stat.h>
+#define URI "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;="
 
 
 #include <iostream>
@@ -85,12 +86,20 @@ class Request
 		int check_uri_characters();
 
 		// create response
-		void parssing_the_request(char *buf,size_t s);
-		std::string is_req_well_formed();
+		void	parssing_the_request(char *buf,size_t s);
+		void	is_req_well_formed();
 		std::pair<Server *,Default_serv *> get_matched_location_for_request();
 		std::pair<int,std::string> is_Location_have_redirection(Default_serv * location);
 		std::string is_method_allowed_in_location(Default_serv *location);
 		
+		//parsing the request by hicham
+		void	parse_request_line(void);
+		void	parse_header(void);
+		void	parse_body(void);
+		bool	check_uri_character(char c);
+		void	check_header_variables(void);
+		std::string	substr_sp(std::string path, char sp);
+
 
 		void create_the_response();
 		void fill_body(int status);
