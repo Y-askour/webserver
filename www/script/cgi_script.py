@@ -22,7 +22,7 @@ if 'file' in form:
         file.close()
         message = 'File Uploaded Successfully'
     else:
-        message = "Error uploading file";
+        message = "Error uploading file"
 else:
     message = 'No file was uploaded'
 

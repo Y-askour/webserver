@@ -1,5 +1,6 @@
 #include "../include/Request.hpp"
 #include <cctype>
+#include <cstdlib>
 #include <fstream>
 #include <iterator>
 #include <ostream>
@@ -52,6 +53,7 @@ void Request::set_n_bytes(size_t n)
 void Request::remove_spaces_at_end(std::string &t)
 {
 	std::string::iterator i = t.begin();
+
 	// delete spaces in the end
  	i = t.end() - 1;
 	while (i >= t.begin() )
@@ -68,20 +70,10 @@ void	Request::is_req_well_formed()
 	std::map<std::string, std::string>::iterator it = this->headers.find("Transfer-Encoding");
 	std::map<std::string, std::string>::iterator it1 = this->headers.find("Content-Length");
 
-	//if (!this->bad_request.compare("1"))
-	//	return ("400");
 	if (it != this->headers.end() && it->second.compare("chuncked") != 0)
 		throw ("501");
 	else if (it == this->headers.end() && it1 == this->headers.end() && !this->method.compare("POST"))
 		throw ("400");
-	//this one is wrong 
-	//else if (!this->check_uri_characters())
-	//	return ("400");
-	//else if (this->uri.size() > 2048)
-	//	return ("414");
-	//else if (this->http_version.compare("HTTP/1.1"))
-	//		return ("505");
-	//return ("");
 }
 
 int Request::check_uri_characters()
@@ -298,7 +290,7 @@ void	Request::parse_body(void) {
 	else if (itr != this->headers.end())
 	{
 		this->body.append(this->request_buf);
-		if ((size_t)(std::atoi(itr->second.c_str())) <= this->body.size())
+		if ((size_t)(std::atoi(itr->second.c_str())) == this->body.size())
 			this->request_stat = 2;
 	}
 	//this one is wrong is younes
@@ -327,7 +319,10 @@ void Request::parssing_the_request(std::string buf,size_t s)
 		//this->is_req_well_formed();
 	}
 	catch (const char *status) {
+		this->request_stat = 2;
 		this->status = status;
+		this->create_the_response();
+		return ;
 	}
 	// request flow 
 	if (status.empty())
@@ -353,6 +348,7 @@ void Request::parssing_the_request(std::string buf,size_t s)
 			this->status = this->is_method_allowed_in_location(location);
 			if (status.empty())
 			{
+				//std::cout << this->method << "   way" << std::endl;
 				//std::cout << this->method << std::endl;
 				if (this->method.compare("GET") == 0)
 					this->GET_METHOD(status_location);
@@ -380,7 +376,7 @@ void Request::parssing_the_request(std::string buf,size_t s)
 		this->create_the_response();
 		return ;
 	}
-	this->create_the_response();
+	//this->create_the_response();
 }
 
 void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
@@ -442,21 +438,27 @@ int Request::location_support_upload(Default_serv *location)
 
 void Request::POST_METHOD(std::pair<Server *,Default_serv *> serv)
 {
+	//std::cout << "gg" << std::endl;
 	Default_serv *location;
 	if (serv.second)
 		location = serv.second;
 	else
 		location = serv.first;
+	//std::cout << "gg" << std::endl;
+	this->get_requested_resource(serv,&location);
+	std::cout << this->location_support_upload(location) << std::endl;
 	if (this->location_support_upload(location) == 1)
 	{
 		// upload the post request body
-		std::cout << "on" << std::endl;
-		this->status = "404";
-		this->file_type = "text/html";
+		//std::cout << "on" << std::endl;
+		std::cout << "hey" << std::endl;
+		CGI a(*this, this->body);
+		// CGI a(this->body);
+		// CGI a(*this);
+		std::cout << "bye" << std::endl;
 		this->create_the_response();
 		return ;
 	}
-	this->get_requested_resource(serv,&location);
 	int ret = access(this->file_to_read.c_str(),R_OK);
 	// not found
 	if (ret == -1)
@@ -743,7 +745,7 @@ void Request::fill_headers()
 
 void Request::fill_status_line()
 {
-	int status_code = std::stoi(this->status);
+	int status_code = std::atoi(this->status.c_str());
 	this->status_line = "HTTP/1.1 " + this->status + " ";
 	// 200
 	if (status_code == 200)
@@ -894,7 +896,7 @@ std::string Request::is_method_allowed_in_location(Default_serv *location)
 void Request::create_the_response()
 {
 	this->fill_status_line();
-	this->fill_body(std::stoi(this->status));
+	this->fill_body(std::atoi(this->status.c_str()));
 	this->fill_headers();
 	this->response = "";
 	this->response += this->status_line; 

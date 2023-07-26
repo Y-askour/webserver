@@ -1,4 +1,3 @@
-
 #include "../../include/cgi.hpp"
 #include <string>
 
@@ -21,6 +20,107 @@ vector<string> CGI::split(string line, std::string delimiter)
 CGI::CGI(CGI const &other) : _request(other._request)
 {
     *this = other;
+}
+
+
+// cgi upload file
+CGI::CGI(Request &request, string body) : _request(request)
+{
+    //cout <<"body---:" << body << endl;
+    this->setEnv();
+    char **av = new char *[3];
+    std::string a = this->_request.get_file_root() + "/script/post.py";
+    
+    av[0] = strdup("/usr/local/bin/python3");
+    av[1] = strdup(a.c_str());
+    av[2] = NULL;
+
+    std::string path = this->_request.get_file_root() + "/upload"; 
+    string arr, response = "";
+
+    char buf[4096] = {0};
+    int status = 0;
+    int pid, Pfd1[2];
+    size_t ret;
+
+    if (pipe(Pfd1) == -1 || av == NULL)
+    {
+        _request.set_status_code("403");
+        return;
+    }
+
+    pid = fork();
+    if (pid == -1)
+    {
+        _request.set_status_code("403");
+        return;
+    }
+
+    if (pid == 0)
+    {
+        if (chdir(_request.get_file_root().c_str()) == -1)
+        {
+            exit(5);
+        }
+        FILE *file = tmpfile();
+        
+        if (file == NULL) {
+            _request.set_status_code("403");
+            return;
+        }
+        fputs(body.c_str(), file);
+        rewind(file);
+        char a[10000] = {0};
+        read(::fileno(file), a, sizeof(a));
+        cout << "hna begin" << endl;
+        cout << a << endl;
+        cout << "hna end" << endl;
+
+        rewind(file);
+        dup2(::fileno(file), 0);
+        close(::fileno(file));
+
+        dup2(Pfd1[1], 1);
+        close(Pfd1[1]);
+        //alarm(5);
+        if(execve(av[0], av, _envToChar(this->_env)) == -1)
+            exit(5);
+    }
+
+    waitpid(pid, &status, 0);
+    status = WEXITSTATUS(status);
+    if (status == 5)
+    {
+        this->_request.set_status_code("403");
+        return;
+    }
+
+
+    //if (WIFSIGNALED(status) || status != 0)
+    //{
+    //    this->_request.set_status_code("403");
+    //    return ;
+    //}
+
+    if (status == -1)
+    {
+        _request.set_status_code("403");
+        exit(EXIT_FAILURE);
+    }
+
+    close(Pfd1[1]);
+
+    while ((ret = read(Pfd1[0], &buf, 1)) > 0) {
+        response += buf;
+    }
+
+    this->_request.set_status_code("200");
+    this->_request.set_response_headers("Content-type: text/html");
+    this->_request.set_response_body(response);
+    //std::cout << response << std::endl;
+    // _request.set_response_body(response);
+    close(Pfd1[0]);
+
 }
 
 CGI &CGI::operator=(CGI const &other)
@@ -74,17 +174,15 @@ CGI::CGI(Request &_request) : _request(_request)
 
     if (pid == 0)
     {
-        if(chdir(_request.get_file_root().c_str()))
+        if (chdir(_request.get_file_root().c_str()) == -1)
         {
             exit(5);
         }
         FILE *file = tmpfile();
-        if (file == NULL)
-        {
+        if (file == NULL) {
             _request.set_status_code("403");
             return;
         }
-
         fputs(_request.get_body().c_str(), file);
         rewind(file);
 
@@ -93,7 +191,8 @@ CGI::CGI(Request &_request) : _request(_request)
 
         dup2(Pfd1[1], 1);
         close(Pfd1[1]);
-        if(execve(_av[0], _av, _envToChar(_env)) == -1)
+        alarm(5);
+        if(execve(_av[0], _av, this->_envToChar(this->_env)) == -1)
         {
             exit(5);
         }
@@ -106,12 +205,19 @@ CGI::CGI(Request &_request) : _request(_request)
         return;
     }
 
+
+    if (WIFSIGNALED(status) || status != 0)
+    {
+        this->_request.set_status_code("403");
+        return ;
+    }
+
     if (status == -1)
     {
         _request.set_status_code("403");
         exit(EXIT_FAILURE);
     }
-    
+
     close(Pfd1[1]);
     while ((ret = read(Pfd1[0], buf, sizeof(buf)) > 0))
     {
@@ -144,28 +250,46 @@ char **CGI::_envToChar(vector<string> _env)
     return (ret);
 }
 
-void CGI::setEnv()
-{
+
+// char **CGI::_envToChar(void)
+// {
+//     char **ret = (char **)malloc((_env.size() + 1) * sizeof(char *));
+//     size_t i = 0;
+
+//     for (map<string, string>::iterator itr = this->_env.begin(); itr != this->_env.end(); itr++)
+//     {
+//         ret[i] = (char *)malloc(sizeof(char) * (itr->first.length() + itr->second.length()));
+//         string hld = itr->first + itr->second;
+//         strcpy(ret[i], hld.c_str());
+//         ret[i][hld.length()] = '\0';
+//     }
+//     ret[i] = NULL;
+//     return (ret);
+// }
+
+void CGI::setEnv() {
     _env.push_back("PATH_INFO=" + _request.get_file_path());
     _env.push_back("SERVER_SOFTWARE=webserv/1.0");
-    _env.push_back("REMOTE_PORT=" +  to_string(_request.get_server().get_listen()[0]));
-    cout << "REMOTE_PORT=" +  to_string(_request.get_server().get_listen()[0]) << endl;
-    _env.push_back("SERVR_NAME=" + this->_request.get_server().get_server_name()[0]);
-    cout << "SERVR_NAME=" + this->_request.get_server().get_server_name()[0] << endl;
+    _env.push_back("REMOTE_PORT=" + to_string(_request.get_server().get_listen()[0]));
     _env.push_back("SERVR_NAME=localhost");
     _env.push_back("GATEWAY_INTERFACE=CGI/1.1");
     _env.push_back("SERVER_PROTOCOL=HTTP/1.1");
-    _env.push_back("SERVER_PORT=" +  to_string(_request.get_server().get_listen()[0]));
+    _env.push_back("SERVER_PORT=8081");
     _env.push_back("REQUEST_METHOD=" + _request.get_method());
-    _env.push_back("CONTENT_TYPE=" + _request.getHeader("Content-Type:"));
-    _env.push_back("QUERY_STRING=" + _request.get_query());
+    _env.push_back("CONTENT_TYPE=" + _request.getHeader("Content-Type"));
+    _env.push_back("REQUEST_BODY=" + _request.get_query());
     _env.push_back("REDIRECT_STATUS=200");
     _env.push_back("SCRIPT_NAME=" + _request.get_file_root());
     _env.push_back("SCRIPT_FILENAME=" + _request.get_file_path());
     _env.push_back("CONTENT_LENGTH=" + to_string(_request.get_body().length()));
     _env.push_back("DOCUMENT_ROOT=" + _request.get_file_root());
     _env.push_back("HTTP_COOKIE=" + _request.getHeader("Cookie"));
-    _env.push_back("UPLOAD_DIR=" + _request.get_server().get_root() + "/upload");
+    _env.push_back("UPLOAD_DIR=" + _request.get_file_root() + "/upload/");
+
+    //for (vector<std::string>::iterator itr = _env.begin(); itr != _env.end(); itr++) {
+    //    std::cout << *itr << std::endl;
+    //}
+    //while (1);
 }
 
 bool CGI::isPython()
@@ -204,9 +328,10 @@ void CGI::getNameScript()
 
 CGI::~CGI()
 {
-    for (size_t i = 0; this->_av[i]; i++)
-    {
-        delete this->_av[i];
-    }
-    delete this->_av;
+    // if(this->_av != NULL)
+    // {
+    //     for (size_t i = 0; this->_av[i]; i++)
+    //         delete this->_av[i];
+    //     delete this->_av;
+    // }
 }

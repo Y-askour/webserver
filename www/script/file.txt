@@ -1,0 +1,82 @@
+    //here check the cgi script if exist
+    // this->_av[2] = NULL;
+
+    // this->setEnv();
+    // std::string path = this->_request.get_file_root() + "/upload";
+
+    // //here check if the upload directory exist
+    // int fd[2];
+    // int out[2];
+    // int status;
+
+    // if (pipe(out) == -1) {
+    //     this->_request.set_status_code("403");
+    //     return;
+    // }
+
+
+    // if (pipe(fd) == -1) {
+    //     this->_request.set_status_code("403");
+    //     return;
+    // }
+
+    // pid_t pid = fork();
+
+    // //pid_t pid = 0;
+    // if (pid == -1) {
+    //     this->_request.set_status_code("403");
+    //     return;
+    // }
+
+    // if (!pid) {
+        //dup2(fd[0], 0);
+        //std::cout << this->_request.get_file_root() << std::endl;
+    //     if (chdir(path.c_str()) == -1)
+    //         exit(5);
+        //dup2(fd[0], 0);
+
+
+
+        // for (size_t i = 0; i != body.length(); i++) {
+        //     char c = body.c_str()[i];
+        //     if (write(fd[1], &c, 1) == -1) {
+        //         this->_request.set_status_code("403");
+        //         return;
+        //     }
+        // }
+
+    //     dup2(fd[0], 0);
+    //     dup2(out[1], 1);
+    //     close(fd[0]);
+    //     close(fd[1]);
+    //     close(out[0]);
+    //     close(out[1]);
+
+
+    //     if(execve(_av[0], _av, this->_envToChar()) == -1)
+    //         exit(5);
+    // }
+    // waitpid(pid, &status, 0);
+    // status = WEXITSTATUS(status);
+    //close(fd[0]);
+    //close(fd[1]);
+    // if (status == 5)
+    // {
+    //     this->_request.set_status_code("403");
+    //     return;
+    // }
+    // std::string response;
+    // char buf;
+    // int rd;
+    // while ((rd = read(out[0], &buf, 1)) > 0) {
+    //     response.append(1, buf);
+    // }
+
+    // std::cout << response << std::endl;
+    // close(fd[0]);
+    // close(fd[1]);
+    // close(out[0]);
+    // close(out[1]);
+    // this->_request.set_status_code("200");
+    // this->_request.set_response_headers("Content-type: text/html");
+    // this->_request.set_response_body(response);

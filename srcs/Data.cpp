@@ -148,7 +148,10 @@ void Data::run_server()
 					else
 						younes->parssing_the_request(buf, s);
 					if (younes->get_request_stat() == 2)
+					{
+						// std::cout << "hey" << std::endl;
 						this->test[i].events = POLLOUT;
+					}
 				}
 			}
 			else if (this->test[i].revents & POLLOUT)
@@ -167,6 +170,7 @@ void Data::run_server()
 				continue;
 			}
 			i++;
+			// std::cout << "ll" << std::endl;
 		}
 	}
 }
