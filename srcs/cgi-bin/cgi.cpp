@@ -26,7 +26,6 @@ CGI::CGI(CGI const &other) : _request(other._request)
 // cgi upload file
 CGI::CGI(Request &request, string body) : _request(request)
 {
-
     this->setEnv();
     char **av = new char *[3];
     std::string a = this->_request.get_file_root() + "/script/post.py";
@@ -278,8 +277,7 @@ void CGI::setEnv() {
     _env.push_back("CONTENT_LENGTH=" + to_string(_request.get_body().length()));
     _env.push_back("DOCUMENT_ROOT=" + _request.get_file_root());
     _env.push_back("HTTP_COOKIE=" + _request.getHeader("Cookie"));
-    //_env.push_back("UPLOAD_DIR=" + _request.get_file_root() + "/upload/");
-    _env.push_back("UPLOAD_DIR=/Users/amrakibe/goinfre/upload/");
+    _env.push_back("UPLOAD_DIR=/Users/yaskour/goinfre/upload/");
 }
 
 bool CGI::isPython()
