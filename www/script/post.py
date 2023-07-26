@@ -42,10 +42,14 @@
 
 import cgi
 import os
+import sys
 
 form = cgi.FieldStorage()
 if len(form) == 0:
     print("error in cgi")
+
+#print(sys.stdin.buffer.read())
+#print("hadi 7kaya")
 
 if 'file' in form:
     # Get the uploaded file
@@ -69,7 +73,7 @@ if 'file' in form:
 else:
     message = 'No file was uploaded'
 
-print("Content-type: text/html\n")
+#print("Content-type: text/html\n")
 print("<html>")
 print("<body>")
 print("<p>%s</p>" % message)

@@ -191,12 +191,16 @@ void	Request::parse_body(void) {
 	else if (itr != this->headers.end())
 	{
 		this->body.append(this->request_buf);
-		if ((size_t)(std::atoi(itr->second.c_str())) == this->body.size())
+		if ((size_t)(std::atoi(itr->second.c_str())) <= this->body.size())
 			this->request_stat = 2;
 	}
 	//this one have a problem maybe the size will be long i need to check it in the parsing atoi will not do the job
-	if (static_cast<int>(this->body.length()) > atoi(server->get_client_max_body_size().c_str()))
-		throw "413";
+	//if (static_cast<int>(this->body.length()) > atoi(server->get_client_max_body_size().c_str()))
+	//{
+
+
+	//}
+	//	throw "413";
 }
 
 void Request::parssing_the_request(std::string buf,size_t s)
@@ -343,13 +347,7 @@ void Request::POST_METHOD(std::pair<Server *,Default_serv *> serv)
 	std::cout << this->location_support_upload(location) << std::endl;
 	if (this->location_support_upload(location) == 1)
 	{
-		// upload the post request body
-		//std::cout << "on" << std::endl;
-		std::cout << "hey" << std::endl;
 		CGI a(*this, this->body);
-		// CGI a(this->body);
-		// CGI a(*this);
-		std::cout << "bye" << std::endl;
 		this->create_the_response();
 		return ;
 	}

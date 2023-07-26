@@ -124,9 +124,12 @@ void Data::run_server()
 					Request *younes = this->get_request_by_fd(this->test[i].fd);
 
 					char buf[1024];
+					std::string hld;
 					std::string request;
 				
 					size_t s = recv(this->test[i].fd,buf,1024,0);
+					for (size_t i = 0; i != s; i++)
+						hld.append(1, buf[i]);
 					if (s < 0)
 					{
 						close(this->test[i].fd);
@@ -134,14 +137,13 @@ void Data::run_server()
 						this->test.erase(this->test.begin() + i);
 						continue;
 					}
-					buf[s] = 0;
 					if (!this->check) {
-						request.append(buf);
+						request.append(hld);
 						if (this->check_is_headers_done(request))
 							younes->parssing_the_request(request, s);
 					}
 					else
-						younes->parssing_the_request(buf, s);
+						younes->parssing_the_request(hld, s);
 					if (younes->get_request_stat() == 2)
 						this->test[i].events = POLLOUT;
 				}

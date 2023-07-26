@@ -8,8 +8,8 @@ echo "<body>";
 
 if ($_SERVER['REQUEST_METHOD'] == 'GET')
 {   
-    if(isset($_GET["first_name"]) && isset($_GET["last_name"]));
-    echo "<h1>Method GET: ". $_GET["first_name"] . " " . $_GET["last_name"] . "</h1>";
+    if(isset($_GET["username"]) && isset($_GET["password"]));
+        echo "<h1>Method GET: ". $_GET["username"] . " " . $_GET["password"] . "</h1>";
 }
 else
 {

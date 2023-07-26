@@ -26,7 +26,7 @@ CGI::CGI(CGI const &other) : _request(other._request)
 // cgi upload file
 CGI::CGI(Request &request, string body) : _request(request)
 {
-    //cout <<"body---:" << body << endl;
+
     this->setEnv();
     char **av = new char *[3];
     std::string a = this->_request.get_file_root() + "/script/post.py";
@@ -62,27 +62,24 @@ CGI::CGI(Request &request, string body) : _request(request)
         {
             exit(5);
         }
-        FILE *file = tmpfile();
-        
-        if (file == NULL) {
-            _request.set_status_code("403");
-            return;
+
+        //here always remove the file
+        std::remove("/tmp/file");
+        int in = open("/tmp/file", O_CREAT | O_RDWR, 0666);
+        if (in < 0)
+            exit(5);
+        for (size_t i = 0; i != body.length(); i++) {
+            if (write(in, &body.c_str()[i], 1) == -1)
+                exit(5);
         }
-        fputs(body.c_str(), file);
-        rewind(file);
-        char a[10000] = {0};
-        read(::fileno(file), a, sizeof(a));
-        cout << "hna begin" << endl;
-        cout << a << endl;
-        cout << "hna end" << endl;
-
-        rewind(file);
-        dup2(::fileno(file), 0);
-        close(::fileno(file));
-
+        in = open("/tmp/file", O_CREAT | O_RDWR, 0666);
+        if (in < 0)
+            exit(5);
+        dup2(in, 0);
+        close(in);
         dup2(Pfd1[1], 1);
         close(Pfd1[1]);
-        //alarm(5);
+        alarm(5);
         if(execve(av[0], av, _envToChar(this->_env)) == -1)
             exit(5);
     }
@@ -94,14 +91,11 @@ CGI::CGI(Request &request, string body) : _request(request)
         this->_request.set_status_code("403");
         return;
     }
-
-
-    //if (WIFSIGNALED(status) || status != 0)
-    //{
-    //    this->_request.set_status_code("403");
-    //    return ;
-    //}
-
+    if (WIFSIGNALED(status) || status != 0)
+    {
+        this->_request.set_status_code("403");
+        return ;
+    }
     if (status == -1)
     {
         _request.set_status_code("403");
@@ -113,13 +107,13 @@ CGI::CGI(Request &request, string body) : _request(request)
     while ((ret = read(Pfd1[0], &buf, 1)) > 0) {
         response += buf;
     }
+    close(Pfd1[0]);
 
     this->_request.set_status_code("200");
     this->_request.set_response_headers("Content-type: text/html");
     this->_request.set_response_body(response);
-    //std::cout << response << std::endl;
+    std::cout << response << std::endl;
     // _request.set_response_body(response);
-    close(Pfd1[0]);
 
 }
 
@@ -277,19 +271,15 @@ void CGI::setEnv() {
     _env.push_back("SERVER_PORT=8081");
     _env.push_back("REQUEST_METHOD=" + _request.get_method());
     _env.push_back("CONTENT_TYPE=" + _request.getHeader("Content-Type"));
-    _env.push_back("REQUEST_BODY=" + _request.get_query());
+    _env.push_back("QUERY_STRING=" + _request.get_query());
     _env.push_back("REDIRECT_STATUS=200");
     _env.push_back("SCRIPT_NAME=" + _request.get_file_root());
     _env.push_back("SCRIPT_FILENAME=" + _request.get_file_path());
     _env.push_back("CONTENT_LENGTH=" + to_string(_request.get_body().length()));
     _env.push_back("DOCUMENT_ROOT=" + _request.get_file_root());
     _env.push_back("HTTP_COOKIE=" + _request.getHeader("Cookie"));
-    _env.push_back("UPLOAD_DIR=" + _request.get_file_root() + "/upload/");
-
-    //for (vector<std::string>::iterator itr = _env.begin(); itr != _env.end(); itr++) {
-    //    std::cout << *itr << std::endl;
-    //}
-    //while (1);
+    //_env.push_back("UPLOAD_DIR=" + _request.get_file_root() + "/upload/");
+    _env.push_back("UPLOAD_DIR=/Users/amrakibe/goinfre/upload/");
 }
 
 bool CGI::isPython()
