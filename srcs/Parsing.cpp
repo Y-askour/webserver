@@ -2,12 +2,10 @@
 
 Parsing::Parsing(void)
 {
-	//std::cout << "Parsing Default constructer" << std::endl;
 }
 
 Parsing::Parsing(std::string file) : config_file(file)
 {
-	//std::cout << "Parsing string constructer" << std::endl;
 	std::pair<int[3], std::string> data;
 	std::string	directives = "listen host server_name status_page return root index allow_methods client_max_body_size autoindex cgi_info upload ";
 
@@ -110,7 +108,6 @@ void	Parsing::parse_file(void)
 
 Parsing::~Parsing(void)
 {
-	//std::cout << "Parsing Default destructer" << std::endl;
 	std::vector<Server*>::iterator itr;
 	for (itr = this->servers.begin(); itr != this->servers.end(); itr++)
 		delete *itr;

@@ -68,10 +68,9 @@ class Request
 		std::string get_query();
 		std::string get_file_root();
 		std::string get_body();
-		// std::map<std::string, std::string> get_header();
 		std::string 	getHeader(std::string key);
-		
 		std::pair<std::string,std::string> get_cgi(); // first is the path of the script and the second is the extension of the script
+
 
 
 		// setters
@@ -81,21 +80,13 @@ class Request
 		void set_response_headers(std::string headers);
 		void set_status_code(std::string status);
 
-		// helpers
-		void split_by_rclt();
-		void remove_spaces_at_end(std::string &t);
-		void remove_spaces_at_start(std::string &t);
-		void split_request_line();
-		int check_uri_characters();
-
-		// create response
-		void	parssing_the_request(std::string buf,size_t s);
-		void	is_req_well_formed();
+		// check locations and locations and methods
 		std::pair<Server *,Default_serv *> get_matched_location_for_request();
 		std::pair<int,std::string> is_Location_have_redirection(Default_serv * location);
 		std::string is_method_allowed_in_location(Default_serv *location);
 		
-		//parsing the request by hicham
+		//parsing the request
+		void	parssing_the_request(std::string buf,size_t s);
 		void	parse_request_line(void);
 		void	parse_header(void);
 		void	parse_body(void);
@@ -104,6 +95,7 @@ class Request
 		std::string	substr_sp(std::string path, char sp);
 
 
+		// functions that create the response
 		void create_the_response();
 		void fill_body(int status);
 		std::string get_response_body();
@@ -126,7 +118,6 @@ class Request
 		void check_cgi(Default_serv *,std::string path_with_index);
 		void join_reponse_parts();
 		std::vector<std::string> split(std::string input,char sp);
-		std::string turn_whitespaces_to_space(std::string input);
 		int delete_all_folder_content();
 		size_t get_request_stat();
 

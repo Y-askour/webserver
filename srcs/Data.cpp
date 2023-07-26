@@ -83,9 +83,7 @@ void Data::run_server()
 	while (1)
 	{
 
-		//std::cout << "hey" << std::endl;
 		int ret = poll(&this->test[0],this->test.size(),1000);
-		//std::cout << "blan : "  << ret << std::endl;
 		
 		if (ret == -1)
 		{
@@ -123,9 +121,6 @@ void Data::run_server()
 				}
 				else 
 				{
-					// i need to make this part work with the Request class
-					//Request *c = this->get_request_by_fd(this->test[i].fd);
-					//std::cout << c->get_server().get_root() << std::endl;
 					Request *younes = this->get_request_by_fd(this->test[i].fd);
 
 					char buf[1024];
@@ -148,10 +143,7 @@ void Data::run_server()
 					else
 						younes->parssing_the_request(buf, s);
 					if (younes->get_request_stat() == 2)
-					{
-						// std::cout << "hey" << std::endl;
 						this->test[i].events = POLLOUT;
-					}
 				}
 			}
 			else if (this->test[i].revents & POLLOUT)
@@ -170,21 +162,8 @@ void Data::run_server()
 				continue;
 			}
 			i++;
-			// std::cout << "ll" << std::endl;
 		}
 	}
-}
-
-int Data::get_number_of_clients()
-{
-	int i = 0;
-	while (i < 10)
-	{
-
-		std::cout << "fd[" <<  i << "] :"<<  this->test[i].fd  << " " << this->test[i].revents << std::endl;
-		i++;
-	}
-	return (i);
 }
 
 Server *Data::get_server_by_fd(int fd)
