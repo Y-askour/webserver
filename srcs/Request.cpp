@@ -193,6 +193,8 @@ void	Request::parse_body(void) {
 		if ((size_t)(std::atoi(itr->second.c_str())) <= this->body.size())
 			this->request_stat = 2;
 	}
+	if (static_cast<int>(this->body.length()) > atoi(server->get_client_max_body_size().c_str()))
+		throw "413";
 }
 
 void Request::parssing_the_request(std::string buf,size_t s)
