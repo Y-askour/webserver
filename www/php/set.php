@@ -1,27 +1,27 @@
 <?php
-session_start();
-
-$firsName = "amine";
-$lastName = "rakibe";
-
-
-setcookie("firstname", $firsName, time() + (86400 * 30));
-setcookie("lastname", $lastName, time() + (86400 * 30));
-
-
-echo "<html>";
-echo "<body>";
-echo "<h1>Cookie</h1>";
-
-if (isset($_COOKIE[$firsName]) && isset($_COOKIE[$lastName]))
-{
-    echo "<h3>Cookie = '" . $lastname . "' is set!</h3><br>";
-    echo "<h4>firstname is " . $_COOKIE[$firstname] . "</h4>";
+$cookies = array(
+    "firstname" => "amine",
+    "lastname" => "rakibe"
+);
+foreach ($cookies as $name => $value) {
+    setcookie($name, $value, time() + (86400 * 30));
 }
-else 
-{
-    echo "<h3>" . $firsName . "is not  set!</h3><br>";
-}
-echo "</body>";
-echo "</html>";
+
 ?>
+
+<html>
+<head>
+    <title> test cookie </title>
+</head>
+<body>
+    <?php
+    foreach ($cookies as $name => $value) {
+        if (!isset($_COOKIE[$name]))
+            echo "<h2>Cookie = " . $name . " is not  set!</h2><br>";
+        else {
+            echo "<h1>Cookie = " . $name . " is set </h1>" .  "<h2>Value = " . $_COOKIE[$name] . "</h2><br>";
+        }
+    }
+    ?>
+</body>
+</html>

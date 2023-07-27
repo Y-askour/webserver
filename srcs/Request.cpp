@@ -104,13 +104,12 @@ void	Request::parse_request_line(void) {
 	//else
 	//	this->query = "";
 	//this->query = (pos != std::string::npos) ? req.at(1).substr(pos + 1, req.at(1).length()) : "";
+	std::cout << this->uri << std::endl;
 	this->http_version = req.at(2);
 	//check if method is correct
 	if (this->method.compare("GET") && this->method.compare("POST") && this->method.compare("DELETE"))
 		throw "400";
 	//here check url uncoding if character is right
-	if (this->uri.front() != '/')
-		throw "400";
 	if (this->uri.length() > 2048)
 		throw "414";
 	//here also check ? and save the query of the uri
@@ -183,7 +182,7 @@ void	Request::parse_header(void) {
 
 void	Request::parse_body(void) {
 	std::map<std::string, std::string>::iterator itr = this->headers.find("Content-Length");
-	if (this->method.compare("GET") == 0)
+	if (this->method.compare("POST") != 0)
 	{
 		this->body = this->request_buf;
 		this->request_stat = 2;
@@ -194,13 +193,6 @@ void	Request::parse_body(void) {
 		if ((size_t)(std::atoi(itr->second.c_str())) <= this->body.size())
 			this->request_stat = 2;
 	}
-	//this one have a problem maybe the size will be long i need to check it in the parsing atoi will not do the job
-	//if (static_cast<int>(this->body.length()) > atoi(server->get_client_max_body_size().c_str()))
-	//{
-
-
-	//}
-	//	throw "413";
 }
 
 void Request::parssing_the_request(std::string buf,size_t s)
@@ -220,6 +212,7 @@ void Request::parssing_the_request(std::string buf,size_t s)
 			return ;
 	}
 	catch (const char *status) {
+		std::cout << "younes" << std::endl;
 		this->request_stat = 2;
 		this->status = status;
 		this->create_the_response();

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<style>
+    /* Style the form */
+    
+    form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 500px;
+        margin: 0 auto;
+        border: 1px solid rgb(211, 162, 237);
+        border-radius: 5px;
+        padding: 20px;
+    }
+    /* Style the file input */
+    
+    input[type="file"] {
+        margin-bottom: 20px;
+        background-color: rgb(239, 210, 244);
+        border: 1px solid rgb(239, 210, 244);
+        color: rgb(70, 31, 78);
+        border-radius: 5px;
+        padding: 10px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    
+    input::file-selector-button {
+        font-weight: bold;
+        background-color: rgb(207, 178, 220);
+        color: rgb(70, 31, 78);
+        border: 1px solid rgb(207, 178, 220);
+        padding: 0.5em;
+        border-radius: 4px;
+    }
+    
+    input::file-selector-button:hover {
+        background-color: rgb(182, 110, 215);
+        border: 1px solid rgb(173, 73, 219);
+    }
+    /* Style the file input when it is focused */
+    
+    input[type="file"]:focus {
+        outline: none;
+        box-shadow: 0 0 5px #4caf50;
+    }
+    /* Style the file input when it is disabled */
+    
+    input[type="file"]:disabled {
+        background-color: rgb(238, 238, 238);
+        cursor: not-allowed;
+    }
+    /* Style the file input when it is invalid */
+    
+    input[type="file"].invalid {
+        border-color: #f44336;
+    }
+    /* Style the submit button */
+    
+    input[type="submit"] {
+        display: block;
+        width: 140px;
+        height: 40px;
+        background: darkmagenta;
+        color: rgb(217, 188, 219);
+        border-radius: 3px;
+        border: 0;
+        box-shadow: 0 3px 0 0 hotpink;
+        transition: all 0.3s ease-in-out;
+        font-size: 14px;
+    }
+    
+    input[type="submit"]:hover {
+        background: rgb(134, 71, 163);
+        box-shadow: 0 3px 0 0 deeppink;
+    }
+    
+    form {
+        background: linear-gradient(to top right, darkmagenta 0%, hotpink 100%);
+        box-shadow: 4px 8px 16px 0 rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        color: rgb(239, 210, 244);
+    }
+</style>
+
+<form method="post" enctype="multipart/form-data">
+    <h2>Upload a File</h2>
+    <input type="file" name="file" />
+    <input type="submit" value="Upload file" />
+</form>
