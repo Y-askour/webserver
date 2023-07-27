@@ -99,12 +99,8 @@ void	Request::parse_request_line(void) {
 	req.at(1).erase(0, ((req.at(1)[pos] == '?') ? pos + 1 : pos));
 
 	this->query = req.at(1).substr(0, req.at(1).length());
-	//if (req.at(1).find('?') != req.at(1).npos)
-	//	this->query = req.at(1).substr(pos + 1, req.at(1).length());
-	//else
-	//	this->query = "";
-	//this->query = (pos != std::string::npos) ? req.at(1).substr(pos + 1, req.at(1).length()) : "";
 	this->http_version = req.at(2);
+
 	//check if method is correct
 	if (this->method.compare("GET") && this->method.compare("POST") && this->method.compare("DELETE"))
 		throw "400";
@@ -195,12 +191,8 @@ void	Request::parse_body(void) {
 			this->request_stat = 2;
 	}
 	//this one have a problem maybe the size will be long i need to check it in the parsing atoi will not do the job
-	//if (static_cast<int>(this->body.length()) > atoi(server->get_client_max_body_size().c_str()))
-	//{
-
-
-	//}
-	//	throw "413";
+	if (static_cast<int>(this->body.length()) > atoi(server->get_client_max_body_size().c_str()))
+		throw "413";
 }
 
 void Request::parssing_the_request(std::string buf,size_t s)
