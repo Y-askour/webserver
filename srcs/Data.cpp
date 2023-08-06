@@ -1,5 +1,7 @@
 #include "../include/Data.hpp"
+#include <algorithm>
 #include <cstdio>
+#include <iterator>
 #include <sys/_types/_size_t.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
@@ -22,9 +24,6 @@ std::vector<Server*> &Data::get_servers(void)
 	return (this->servers);
 }
 
-void	Data::parse_file_and_syntax_error(void)
-{
-}
 
 Data::~Data()
 {
@@ -40,11 +39,18 @@ void Data::create_listen_sockets()
 		std::vector<int>::iterator n = serverPort.begin();
 		while (n != serverPort.end())
 		{
-			Connection socket(*(*it),*n);
-			this->connections.push_back(socket);
+			ports.push_back(*n);
 			n++;
 		}
 		it++;
+	}
+	std::sort(ports.begin(),ports.end());
+	std::vector<int>::iterator v_it =  std::unique(ports.begin(),ports.end());
+	ports.resize(std::distance(ports.begin(), v_it));
+	for (std::vector<int>::iterator it = ports.begin();it != ports.end();it++)
+	{
+		Connection socket(this->servers,*it);
+		this->connections.push_back(socket);
 	}
 }
 
@@ -62,23 +68,6 @@ void Data::run_server()
 		this->test.push_back(assign_poll);
 		it++;
 	}
-
-	// test response /////////////////////////////
-
-	std::ifstream f("./younes/www/html/index.html");
-	std::string body = "<html>  <body> <h1>test<h1> </body> </html>\r\n";
-	if (f)
-	{
-		std::ostringstream ss;
-		ss << f.rdbuf();
-		body = ss.str();
-	}
-	std::string msg = "HTTP/1.1 200 OK\r\n";
-	msg += "Content-Type: text/html\r\n";
-	msg += "Content-Length:" + std::to_string(body.length()) + "\r\n";
-	msg += "\r\n";
-	msg += body;
-	///////////////////////////////
 
 	while (1)
 	{
@@ -124,12 +113,15 @@ void Data::run_server()
 					Request *younes = this->get_request_by_fd(this->test[i].fd);
 
 					char buf[1024];
-					std::string hld;
+					std::vector<char> hld;
 					std::string request;
 				
 					size_t s = recv(this->test[i].fd,buf,1024,0);
 					for (size_t i = 0; i != s; i++)
-						hld.append(1, buf[i]);
+					{
+						hld.push_back(buf[i]);
+						request.append(&buf[i],1);
+					}
 					if (s < 0)
 					{
 						close(this->test[i].fd);
@@ -138,12 +130,11 @@ void Data::run_server()
 						continue;
 					}
 					if (!this->check) {
-						request.append(hld);
 						if (this->check_is_headers_done(request))
 							younes->parssing_the_request(request, s);
 					}
 					else
-						younes->parssing_the_request(hld, s);
+						younes->parssing_the_request(request, s);
 					if (younes->get_request_stat() == 2)
 						this->test[i].events = POLLOUT;
 				}
@@ -168,17 +159,6 @@ void Data::run_server()
 	}
 }
 
-Server *Data::get_server_by_fd(int fd)
-{
-	size_t i = 0;
-	while (i < this->connections.size())
-	{
-		if (this->connections[i].get_fd() == fd)
-			return &this->connections[i].get_server();
-		i++;
-	}
-	return NULL;
-}
 
 Connection *Data::get_connection_by_fd(int fd)
 {
@@ -237,6 +217,5 @@ int Data::check_is_headers_done(std::string request)
 		this->check  = 1;
 		return 1;
 	}
-
 	return 0;
 }

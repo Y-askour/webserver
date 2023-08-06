@@ -17,11 +17,12 @@
 
 Request::Request(Connection &other,int fd,std::map<std::string,std::string> mime)
 {
-	this->server = &(other.get_server());
 	this->fd = fd;
 	this->mime_types = mime;
 	this->request_stat  = 0;
 	this->n_bytes = 0;
+	this->servers = (other.get_servers());
+	this->port = (other.get_port());
 }
 
 Request::~Request()
@@ -104,7 +105,7 @@ void	Request::parse_request_line(void) {
 	//else
 	//	this->query = "";
 	//this->query = (pos != std::string::npos) ? req.at(1).substr(pos + 1, req.at(1).length()) : "";
-	std::cout << this->uri << std::endl;
+	//std::cout << this->uri << std::endl;
 	this->http_version = req.at(2);
 	//check if method is correct
 	if (this->method.compare("GET") && this->method.compare("POST") && this->method.compare("DELETE"))
@@ -178,6 +179,7 @@ void	Request::parse_header(void) {
 		this->headers.insert(var);
 	}
 	this->check_header_variables();
+	this->assign_server_base_on_server_name();
 }
 
 void	Request::parse_body(void) {
@@ -214,7 +216,7 @@ void Request::parssing_the_request(std::string buf,size_t s)
 			return ;
 	}
 	catch (const char *status) {
-		std::cout << "younes" << std::endl;
+		//std::cout << "younes" << std::endl;
 		this->request_stat = 2;
 		this->status = status;
 		this->create_the_response();
@@ -295,10 +297,7 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 			if (S_ISDIR(buf.st_mode))
 			{
 				if (this->request_uri[this->request_uri.size() - 1] == '/')
-				{
-					std::vector<std::string> indexs = location->get_index();
 					this->check_index_files(location);
-				}
 				else 
 				{
 					// this is a directory without a / in end
@@ -339,7 +338,7 @@ void Request::POST_METHOD(std::pair<Server *,Default_serv *> serv)
 		location = serv.first;
 	//std::cout << "gg" << std::endl;
 	this->get_requested_resource(serv,&location);
-	std::cout << this->location_support_upload(location) << std::endl;
+	//std::cout << this->location_support_upload(location) << std::endl;
 	if (this->location_support_upload(location) == 1)
 	{
 		CGI a(*this, this->body);
@@ -485,27 +484,19 @@ void	Request::DELETE_METHOD(std::pair<Server *, Default_serv *> serv)
 	}
 }
 
-std::string Request::get_requested_resource(std::pair<Server *,Default_serv *> serv,Default_serv **location)
+void Request::get_requested_resource(std::pair<Server *,Default_serv *> serv,Default_serv **location)
 {
-	std::string root = serv.first->get_root();
-	std::string second_root = "";
+	std::string root;
 	*location = (serv.first);
+	root = serv.first->get_root();
 	if (serv.second)
 	{
-		second_root = serv.second->get_root();
+		root = serv.second->get_root();
 		*location = serv.second;
-	}
-	if (!second_root.empty())
-	{
-		int ret = (root[root.size() -1] == '/');
-		if ( ret && (second_root[0] == '/')  )
-			root.erase(root.size() - 1);
-		else if ( !ret  && !(second_root[0] == '/')  )
-			root.push_back('/');
 	}
 
 	// path
-	std::string path = root + second_root;
+	std::string path = root;
 	if (path[path.size() -1] != '/' && this->uri.size())
 		path.push_back('/');
 
@@ -514,8 +505,6 @@ std::string Request::get_requested_resource(std::pair<Server *,Default_serv *> s
 
 	path = this->find_type(path);
 	this->file_to_read = path;
-	return path;
-	//why the fuck did u return in here
 }
 
 
@@ -572,24 +561,6 @@ std::string Request::find_type(std::string path)
 		std::string ext = path.substr(exetension + 1,path.npos);
 		this->type_of_file(ext,this->mime_types);
 		return path;
-	}
-	else 
-	{
-		std::map<std::string,std::string>::iterator it = this->mime_types.begin();
-		while (it != this->mime_types.end())
-		{
-			std::vector<std::string> exts = this->split_ext(it->second);
-			for (size_t i = 0; i < exts.size(); i++)
-			{
-				std::string path_ext = path + "." + exts[i];
-				if (!access(path_ext.c_str(),R_OK))
-				{
-					this->file_type = it->first;
-					return path_ext;
-				}
-			}
-			it++;
-		}
 	}
 	return path;
 }
@@ -935,4 +906,77 @@ void Request::join_reponse_parts()
 size_t Request::get_request_stat()
 {
 	return this->request_stat;
+}
+
+void Request::assign_server_base_on_server_name()
+{
+	// i need to bind the host to the socket
+	//std::vector<Server *>::iterator it = this->servers.begin();
+	std::map<std::string,std::string>::iterator host = this->headers.find("Host");
+
+	if (host == this->headers.end())
+		return ;
+	std::pair<std::string,std::string> splited_host;
+	size_t i = host->second.find(":");
+
+	splited_host.first = host->second.substr(0,i);
+	splited_host.second = std::to_string(this->port);
+
+	if (i != host->second.npos)
+		splited_host.second = host->second.substr(++i,host->second.npos);
+
+	// get all servers with the same port
+	std::vector<Server *> server_name = this->find_servers_based_on_port(port);
+
+	for (std::vector<Server*>::iterator it = server_name.begin();it != server_name.end();it++)
+	{
+		std::vector<std::string> t  = (*it)->get_server_name();
+		std::vector<std::string>::iterator y = t.begin();
+		for (; y != t.end() ; y++)
+		{
+			if (!(*y).compare(splited_host.first))
+			{
+				// if server_name match work with this server config
+				this->server = *it;
+				std::cout <<   "index : "<< this->server->get_index()[0] << std::endl;
+				return ;
+			}
+		}
+	}
+	for (std::vector<Server *>::iterator yo = server_name.begin(); yo != server_name.end();yo++)
+	{
+		std::string host_ip = (*yo)->get_host();
+		if (!host_ip.compare(splited_host.first))
+		{
+			this->server = *yo;
+			std::cout <<   "index : "<< this->server->get_index()[0] << std::endl;
+			return ;
+		}
+	}
+	// i need to check the host now
+	this->server = server_name[0];
+	std::cout <<   "index : "<< this->server->get_index()[0] << std::endl;
+}
+
+std::vector<Server *> Request::find_servers_based_on_port(int port)
+{
+	std::vector<Server *>::iterator it = this->servers.begin();
+	std::vector<Server *> rslt;
+
+	while ( it != this->servers.end() )
+	{
+		std::vector<int> v_listen = (*it)->get_listen();
+		std::vector<int>::iterator it_p = v_listen.begin();
+		while (it_p != v_listen.end())
+		{
+			if (*it_p == port)
+			{
+				rslt.push_back(*it);
+				break;
+			}
+			it_p++;
+		}
+		it++;
+	}
+	return rslt;
 }

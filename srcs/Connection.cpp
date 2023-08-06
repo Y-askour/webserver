@@ -1,6 +1,6 @@
 #include "../include/Connection.hpp"
 
-Connection::Connection(Server &server,int port): server(server)
+Connection::Connection(std::vector<Server *> servers,int port)
 {
 	int yes=1;
 	struct sockaddr_in host_addr;
@@ -33,6 +33,8 @@ Connection::Connection(Server &server,int port): server(server)
 		perror("webserv(listen)");
 	}
 	this->fd = listen_fd;
+	this->port = port;
+	this->servers = servers;
 }
 
 Connection::~Connection()
@@ -44,7 +46,11 @@ int Connection::get_fd()
 	return this->fd;
 }
 
-Server &Connection::get_server()
+std::vector<Server*> Connection::get_servers()
 {
-	return this->server;
+	return this->servers;
+}
+int Connection::get_port()
+{
+	return this->port;
 }

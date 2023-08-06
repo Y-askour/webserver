@@ -41,7 +41,6 @@ class Data
 		Data();
 		Data(const Data & obj);
 		~Data();
-		void	parse_file_and_syntax_error(void);
 
 		//getters
 		std::vector<Server*> &get_servers(void);
@@ -49,7 +48,6 @@ class Data
 		//setters
 		void create_listen_sockets();
 		void run_server();
-		Server *get_server_by_fd(int fd);
 		Connection *get_connection_by_fd(int fd);
 		Request *get_request_by_fd(int fd);
 		void delete_request(int fd);

@@ -9,10 +9,12 @@
 class Connection
 {
 	int fd;
-	Server& server;
+	int port;
+	std::vector<Server *> servers;
 	public:
-		Connection(Server &server,int port);
+		Connection(std::vector<Server *>,int port);
 		~Connection();
 		int get_fd();
-		Server &get_server();
+		std::vector<Server *> get_servers();
+		int get_port();
 };

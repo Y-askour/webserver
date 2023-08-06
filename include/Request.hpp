@@ -12,7 +12,9 @@
 
 class Request
 {
+	std::vector<Server *> servers;
 	int fd;
+	int port;
 	Server* server;
 	std::string request_buf;
 	size_t n_bytes;
@@ -113,12 +115,13 @@ class Request
 		std::vector<std::string>	split_ext(std::string ext);
 		void create_auto_index();
 		int location_support_upload(Default_serv *location);
-		std::string get_requested_resource(std::pair<Server *,Default_serv *> serv,Default_serv **);
+		void get_requested_resource(std::pair<Server *,Default_serv *> serv,Default_serv **);
 		void check_index_files(Default_serv *);
 		void check_cgi(Default_serv *,std::string path_with_index);
 		void join_reponse_parts();
 		std::vector<std::string> split(std::string input,char sp);
 		int delete_all_folder_content();
 		size_t get_request_stat();
-
+		void assign_server_base_on_server_name();
+		std::vector<Server *> find_servers_based_on_port(int port);
 };

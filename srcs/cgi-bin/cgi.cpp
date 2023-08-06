@@ -112,7 +112,7 @@ CGI::CGI(Request &request, string body) : _request(request)
     this->_request.set_status_code("200");
     this->_request.set_response_headers("Content-type: text/html");
     this->_request.set_response_body(response);
-    std::cout << response << std::endl;
+    //std::cout << response << std::endl;
     // _request.set_response_body(response);
 
 }
