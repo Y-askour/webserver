@@ -1,8 +1,10 @@
 #include "../include/Connection.hpp"
+#include <string>
 
-Connection::Connection(std::vector<Server *> servers,int port)
+Connection::Connection(std::vector<Server *> servers,std::pair<int,std::string> host_port)
 {
 	int yes=1;
+	this->fd  = -1;
 	struct sockaddr_in host_addr;
 	int listen_fd = socket(AF_INET,SOCK_STREAM,0);
 	if (listen_fd == -1)
@@ -10,30 +12,36 @@ Connection::Connection(std::vector<Server *> servers,int port)
 		perror("webserv(socket)");
 	}
 	host_addr.sin_family = AF_INET;
-	host_addr.sin_port = htons(port);
-	host_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	host_addr.sin_port = htons(host_port.first);
+	// i need to add host here
+	host_addr.sin_addr.s_addr = inet_addr(host_port.second.c_str());
+	//host_addr.sin_addr.s_addr = inet_addr("10.12.4.7");
 	int host_addrlen = sizeof(host_addr);
 
 	if (setsockopt(listen_fd,SOL_SOCKET, SO_REUSEADDR,&yes,sizeof(int)) != 0)
 	{
 		perror("webserv(setsockopt)");
+		return ;
 	}
 	if (bind(listen_fd,(struct sockaddr *)&host_addr,host_addrlen) != 0)
 	{
+		std::cout << host_port.second.c_str()  << " " << std::endl;
 		perror("webserv(bind)");
+		return ;
 	}
 
 	if (fcntl(listen_fd,F_SETFD,O_NONBLOCK) == -1)
 	{
 		perror("webserv(fcntl)");
+		return ;
 	}
-
 	if (listen(listen_fd,255) == -1)
 	{
 		perror("webserv(listen)");
+		return ;
 	}
 	this->fd = listen_fd;
-	this->port = port;
+	this->port = host_port.first;
 	this->servers = servers;
 }
 

@@ -12,7 +12,7 @@ class Connection
 	int port;
 	std::vector<Server *> servers;
 	public:
-		Connection(std::vector<Server *>,int port);
+		Connection(std::vector<Server *>,std::pair<int,std::string>);
 		~Connection();
 		int get_fd();
 		std::vector<Server *> get_servers();

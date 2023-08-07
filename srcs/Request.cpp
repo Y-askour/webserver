@@ -943,6 +943,11 @@ void Request::assign_server_base_on_server_name()
 			}
 		}
 	}
+
+
+// /////////////////////////////////
+
+	
 	for (std::vector<Server *>::iterator yo = server_name.begin(); yo != server_name.end();yo++)
 	{
 		std::string host_ip = (*yo)->get_host();

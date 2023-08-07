@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <iterator>
+#include <string>
 #include <sys/_types/_size_t.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
@@ -16,7 +17,8 @@ Data::Data(const Data & obj)
 	this->servers = obj.servers;
 	this->check = 0;
 	this->create_listen_sockets();
-	this->run_server();
+	if (this->connections.size() > 0)
+		this->run_server();
 }
 
 std::vector<Server*> &Data::get_servers(void)
@@ -31,26 +33,50 @@ Data::~Data()
 
 void Data::create_listen_sockets()
 {
-	std::vector<int> ports;
+	std::vector<std::pair<int,std::string> > ports;
 	std::vector<Server *>::iterator it = this->servers.begin();
 	while (it != this->servers.end())
 	{
+		std::pair<int,std::string> port_host;
 		std::vector<int> serverPort = (*it)->get_listen();
 		std::vector<int>::iterator n = serverPort.begin();
+		port_host.second = (*it)->get_host();
 		while (n != serverPort.end())
 		{
-			ports.push_back(*n);
+			port_host.first = *n;
+			ports.push_back(port_host);
 			n++;
 		}
 		it++;
 	}
-	std::sort(ports.begin(),ports.end());
-	std::vector<int>::iterator v_it =  std::unique(ports.begin(),ports.end());
-	ports.resize(std::distance(ports.begin(), v_it));
-	for (std::vector<int>::iterator it = ports.begin();it != ports.end();it++)
+
+	// delete duplicates
+	std::vector<std::pair<int,std::string> >::iterator h_it = ports.begin();
+	std::vector<std::pair<int,std::string> >::iterator h_it2;
+
+	size_t i = 0;
+	while (i < (ports.size() - 1))
+	{
+		h_it2 = h_it;
+		h_it2++;
+		while (h_it2 != ports.end())
+		{
+			if (h_it->first == h_it2->first && h_it->second == h_it2->second)
+			{
+				ports.erase(h_it2);
+				continue;
+			}
+			h_it2++;
+		}
+		h_it++;
+		i++;
+	}
+
+	for (std::vector<std::pair<int,std::string> >::iterator it = ports.begin();it != ports.end();it++)
 	{
 		Connection socket(this->servers,*it);
-		this->connections.push_back(socket);
+		if (socket.get_fd() != -1)
+			this->connections.push_back(socket);
 	}
 }
 
