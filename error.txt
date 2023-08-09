@@ -1,0 +1,4 @@
+- constuctor to copy from server to location
+- normalize uri //////
+- limit request body length and check it in the body
+- upload without chuncked and upload with chuncked (transfer-encoding)
