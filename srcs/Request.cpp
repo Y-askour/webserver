@@ -23,6 +23,9 @@ Request::Request(Connection &other,int fd,std::map<std::string,std::string> mime
 	this->n_bytes = 0;
 	this->servers = (other.get_servers());
 	this->port = (other.get_port());
+	//i just add it 
+	this->request_chunked = false;
+	this->length_chunked = 0;
 }
 
 Request::~Request()
@@ -100,16 +103,12 @@ void	Request::parse_request_line(void) {
 	req.at(1).erase(0, ((req.at(1)[pos] == '?') ? pos + 1 : pos));
 
 	this->query = req.at(1).substr(0, req.at(1).length());
-	//if (req.at(1).find('?') != req.at(1).npos)
-	//	this->query = req.at(1).substr(pos + 1, req.at(1).length());
-	//else
-	//	this->query = "";
-	//this->query = (pos != std::string::npos) ? req.at(1).substr(pos + 1, req.at(1).length()) : "";
-	//std::cout << this->uri << std::endl;
 	this->http_version = req.at(2);
 	//check if method is correct
+
 	if (this->method.compare("GET") && this->method.compare("POST") && this->method.compare("DELETE"))
 		throw "400";
+
 	//here check url uncoding if character is right
 	if (this->uri.length() > 2048)
 		throw "414";
@@ -121,28 +120,40 @@ void	Request::parse_request_line(void) {
 	//here youness should check if http/1.1
 	if (this->http_version.compare("HTTP/1.1"))
 		throw "400";
-
 }
 
 void	Request::check_header_variables(void) {
 	std::map<std::string, std::string>::iterator	itr = this->headers.find("Transfer-Encoding");
 	std::map<std::string, std::string>::iterator	itr2 = this->headers.find("Content-Length");
 
-	if (itr != this->headers.end() && itr->second.compare("chuncked"))
-		throw "501";
+	if (itr != this->headers.end()) {
+		if (itr->second.compare("chunked"))
+			throw "501";
+		this->request_chunked = true;
+	}
 	if (!this->method.compare("POST") && itr2 == this->headers.end())
 		throw "400";
 }
 
+//this one should be fixed
+//std::string	Request::substr_sp(std::string path, char sp) {
+//	size_t	i;
+//	size_t	j;
+//
+//	for (i = 0; (i < (path.length() -1) && path.at(i) == sp);)
+//		i++;
+//	for (j = (path.length() - 1); ( (path.length() -1) && path.at(j) == sp);)
+//		j--;
+//	return (path.substr(i, (j - i) + 1));
+//}
 std::string	Request::substr_sp(std::string path, char sp) {
-	size_t	i;
-	size_t	j;
+	std::string::iterator	itr;
 
-	for (i = 0; (i < (path.length() -1) && path.at(i) == sp);)
-		i++;
-	for (j = (path.length() - 1); ( (path.length() -1) && path.at(j) == sp);)
-		j--;
-	return (path.substr(i, (j - i) + 1));
+	for (itr = path.begin(); path.length() && *itr == sp; itr = path.begin())
+		path.erase(itr);
+	for (itr = path.end() - 1; path.length() && *itr == sp; itr = path.end() - 1)
+		path.erase(itr);
+	return path;
 }
 
 void	Request::parse_header(void) {
@@ -179,23 +190,69 @@ void	Request::parse_header(void) {
 		this->headers.insert(var);
 	}
 	this->check_header_variables();
+	//this one have a segfault
 	this->assign_server_base_on_server_name();
+}
+
+void	Request::fix_chunked_body(void) {
+	std::string hld_body;
+
+	for (; this->body.length();) {
+		size_t find = this->body.find("\r\n");
+		if (find == this->body.npos)
+			throw "400";
+		std::string hex_length = this->body.substr(0, find);
+		if (!hex_length.length())
+			throw "400";
+		this->body.erase(0, find + 2);
+		for (std::string::iterator itr = hex_length.begin(); itr != hex_length.end(); itr++) {
+			if (!isdigit(*itr) && !(*itr >= 'a' && *itr <= 'f') && !(*itr >= 'A' && *itr <= 'F')) {
+				throw "400";
+			}
+		}
+		std::stringstream hld;
+		hld << std::hex << hex_length;
+		hld >> this->length_chunked;
+		find = this->body.find("\r\n");
+		if (find == this->body.npos)
+			throw "400";
+		//if (this->body.length() < this->length_chunked)
+		if ((this->body.substr(0, find)).length() < this->length_chunked)
+			throw "400";
+		hld_body.append(this->body.substr(0, find));
+		this->body.erase(0, this->length_chunked);
+		this->body.erase(0, 2);
+	}
+	this->body = hld_body;
 }
 
 void	Request::parse_body(void) {
 	std::map<std::string, std::string>::iterator itr = this->headers.find("Content-Length");
-	if (this->method.compare("POST") != 0)
+	if (this->method.compare("POST"))
 	{
 		this->body = this->request_buf;
 		this->request_stat = 2;
 	}
-	else if (itr != this->headers.end())
+	if (this->request_chunked) {
+		this->body.append(this->request_buf);
+		if (this->body.length() && !this->request_buf.length())
+			throw "400";
+		this->request_buf.clear();
+		if (this->body.find("0\r\n\r\n") != this->body.npos) {
+			this->fix_chunked_body();
+			this->request_stat = 2;
+		}
+	}
+	if (!this->request_chunked && itr != this->headers.end())
 	{
 		this->body.append(this->request_buf);
 		if ((size_t)(std::atoi(itr->second.c_str())) <= this->body.size())
 			this->request_stat = 2;
 	}
-	if (static_cast<int>(this->body.length()) > atoi(server->get_client_max_body_size().c_str()))
+	//still need to fix the range of client max body size in the parsing
+	//std::cout << this->body.length() << std::endl;
+	//std::cout << server->get_client_max_body_size().c_str() << std::endl;
+	if (this->body.length() > static_cast<size_t>(atoll(server->get_client_max_body_size().c_str())))
 		throw "413";
 }
 
@@ -203,6 +260,7 @@ void Request::parssing_the_request(std::string buf,size_t s)
 {
 	//hicham code
 	try {
+		//we don't need this set_n_bytes
 		this->set_n_bytes(s);
 		this->set_request_buf(buf);
 		if (!this->request_stat) 
@@ -222,6 +280,9 @@ void Request::parssing_the_request(std::string buf,size_t s)
 		this->create_the_response();
 		return ;
 	}
+	//std::cout << this->body << std::endl;
+	//return ;
+	//exit(1);
 	// request flow 
 	if (status.empty())
 	{
@@ -341,8 +402,15 @@ void Request::POST_METHOD(std::pair<Server *,Default_serv *> serv)
 	//std::cout << this->location_support_upload(location) << std::endl;
 	if (this->location_support_upload(location) == 1)
 	{
+		std::cout << "ana f upload" << std::endl;
 		CGI a(*this, this->body);
-		this->create_the_response();
+		if (status.compare("201"))
+			return this->create_the_response();
+		this->file_type = "text/html";
+		this->fill_status_line();
+		this->fill_headers();
+		this->join_reponse_parts();
+		//std::cout << "$$ " << this->response << std::endl;
 		return ;
 	}
 	int ret = access(this->file_to_read.c_str(),R_OK);
@@ -938,7 +1006,6 @@ void Request::assign_server_base_on_server_name()
 			{
 				// if server_name match work with this server config
 				this->server = *it;
-				std::cout <<   "index : "<< this->server->get_index()[0] << std::endl;
 				return ;
 			}
 		}

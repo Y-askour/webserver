@@ -6,7 +6,7 @@
 /*   By: hkaddour <hkaddour@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/10 10:34:30 by hkaddour          #+#    #+#             */
-/*   Updated: 2023/06/14 12:31:21 by hkaddour         ###   ########.fr       */
+/*   Updated: 2023/08/11 15:32:17 by hkaddour         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#define max_body "9223372036854775807"
 
 class Default_serv
 {

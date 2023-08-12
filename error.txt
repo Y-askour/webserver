@@ -2,3 +2,5 @@
 - normalize uri //////
 - limit request body length and check it in the body
 - upload without chuncked and upload with chuncked (transfer-encoding)
+- fix function substr of mine segfault
+-*** fix status pages add the other and also check if the files not exists

@@ -53,9 +53,10 @@ class Request
 	std::string file_root;
 	std::string bad_request;
 
-
-
 	std::map<std::string,std::string> mime_types;
+	//check if the request is chunked or not
+	bool	request_chunked;
+	size_t	length_chunked;
 	public:
 		Request(Connection& connection,int fd,std::map<std::string,std::string> mime);
 		~Request();
@@ -124,4 +125,6 @@ class Request
 		size_t get_request_stat();
 		void assign_server_base_on_server_name();
 		std::vector<Server *> find_servers_based_on_port(int port);
+		//chunked
+		void	fix_chunked_body(void);
 };

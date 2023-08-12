@@ -85,7 +85,6 @@ void Data::run_server()
 	struct sockaddr client_struct;
 	struct pollfd assign_poll;
 
-
 	std::vector<Connection>::iterator it = this->connections.begin();
 	while (it != this->connections.end())
 	{
@@ -94,10 +93,8 @@ void Data::run_server()
 		this->test.push_back(assign_poll);
 		it++;
 	}
-
 	while (1)
 	{
-
 		int ret = poll(&this->test[0],this->test.size(),1000);
 		
 		if (ret == -1)
@@ -139,15 +136,11 @@ void Data::run_server()
 					Request *younes = this->get_request_by_fd(this->test[i].fd);
 
 					char buf[1024];
-					std::vector<char> hld;
+					std::string	hld;
 					std::string request;
-				
-					size_t s = recv(this->test[i].fd,buf,1024,0);
+					size_t s = recv(this->test[i].fd,buf, 1024, 0);
 					for (size_t i = 0; i != s; i++)
-					{
 						hld.push_back(buf[i]);
-						request.append(&buf[i],1);
-					}
 					if (s < 0)
 					{
 						close(this->test[i].fd);
@@ -156,11 +149,12 @@ void Data::run_server()
 						continue;
 					}
 					if (!this->check) {
+						request.append(hld);
 						if (this->check_is_headers_done(request))
 							younes->parssing_the_request(request, s);
 					}
 					else
-						younes->parssing_the_request(request, s);
+						younes->parssing_the_request(hld, s);
 					if (younes->get_request_stat() == 2)
 						this->test[i].events = POLLOUT;
 				}
@@ -219,8 +213,7 @@ void Data::delete_request(int fd)
 
 bool Data::is_a_connection(int fd)
 {
-	for (size_t i = 0; i < this->connections.size(); i++)
-	{
+	for (size_t i = 0; i < this->connections.size(); i++) {
 		if (this->connections[i].get_fd() == fd)
 			return (1);
 	}
@@ -229,18 +222,8 @@ bool Data::is_a_connection(int fd)
 
 int Data::check_is_headers_done(std::string request)
 {
-	//std::stringng hld;
-
-	//for (size_t i = request.rfind('\n'); i != request.npos; i = request.rfind('\n')) {
-	//	hld = request.substr();
-	//	if (i >= 2) {
-	//		if (request[i] == '')
-	//	}
-	//}
-
-	if ( (request.find("\n\r\n") != request.npos) || (request.find("\n\n") != request.npos))
-	{
-		this->check  = 1;
+	if ( (request.find("\n\r\n") != request.npos) || (request.find("\n\n") != request.npos)) {
+		this->check = 1;
 		return 1;
 	}
 	return 0;
