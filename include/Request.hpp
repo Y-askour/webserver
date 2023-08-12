@@ -15,6 +15,7 @@ class Request
 	std::vector<Server *> servers;
 	int fd;
 	int port;
+	std::string ip;
 	Server* server;
 	std::string request_buf;
 	size_t n_bytes;

@@ -6,7 +6,7 @@
 /*   By: hkaddour <hkaddour@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/10 10:34:30 by hkaddour          #+#    #+#             */
-/*   Updated: 2023/06/14 12:31:21 by hkaddour         ###   ########.fr       */
+/*   Updated: 2023/08/09 17:29:12 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ class Default_serv
 	public :
 		Default_serv(void);
 		Default_serv(int);
+		void get_non_init_data(const Default_serv&server);
 		//setters
 		void	set_listen(std::vector<std::string> data);
 		void	set_index(std::vector<std::string> data);

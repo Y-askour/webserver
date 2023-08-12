@@ -43,6 +43,7 @@ Connection::Connection(std::vector<Server *> servers,std::pair<int,std::string> 
 	this->fd = listen_fd;
 	this->port = host_port.first;
 	this->servers = servers;
+	this->ip = host_port.second;
 }
 
 Connection::~Connection()
@@ -61,4 +62,9 @@ std::vector<Server*> Connection::get_servers()
 int Connection::get_port()
 {
 	return this->port;
+}
+
+std::string Connection::get_ip()
+{
+	return this->ip;
 }

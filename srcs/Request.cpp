@@ -23,6 +23,7 @@ Request::Request(Connection &other,int fd,std::map<std::string,std::string> mime
 	this->n_bytes = 0;
 	this->servers = (other.get_servers());
 	this->port = (other.get_port());
+	this->ip = other.get_ip();
 }
 
 Request::~Request()
@@ -226,14 +227,16 @@ void Request::parssing_the_request(std::string buf,size_t s)
 	if (status.empty())
 	{
 		Default_serv *location;
-		// i don't need status_location.first
+
 		std::pair<Server *,Default_serv*> status_location = this->get_matched_location_for_request();
+	
 		std::pair<int,std::string> t;
 
 		if (status_location.second)
 		{
 			t = this->is_Location_have_redirection(status_location.second);
 			location = status_location.second;
+			location->get_non_init_data(*status_location.first);
 		}
 		else 
 		{
@@ -714,12 +717,12 @@ std::pair<Server *,Default_serv *> Request::get_matched_location_for_request()
 		this->uri.erase(i,1);
 	}
 
-	i = this->uri.size() - 1;
-	while (i >= 0 && this->uri[i] && (this->uri[i] == '/') )
-	{
-		this->uri.erase(i,1);
-		i = this->uri.size() - 1;
-	}
+	//i = this->uri.size() - 1;
+	//while (i >= 0 && this->uri[i] && (this->uri[i] == '/') )
+	//{
+	//	this->uri.erase(i,1);
+	//	i = this->uri.size() - 1;
+	//}
 	return (result);
 }
 
@@ -925,7 +928,8 @@ void Request::assign_server_base_on_server_name()
 	if (i != host->second.npos)
 		splited_host.second = host->second.substr(++i,host->second.npos);
 
-	// get all servers with the same port
+	// get all servers with the same port and ip
+	std::cout <<   "ip : "<< this->ip << std::endl;
 	std::vector<Server *> server_name = this->find_servers_based_on_port(port);
 
 	for (std::vector<Server*>::iterator it = server_name.begin();it != server_name.end();it++)
@@ -982,6 +986,15 @@ std::vector<Server *> Request::find_servers_based_on_port(int port)
 			it_p++;
 		}
 		it++;
+	}
+	it = rslt.begin();
+	while (it != rslt.end())
+	{
+		std::string str = (*it)->get_host();
+		if (str.compare(this->ip))
+			rslt.erase(it);
+		else
+			it++;
 	}
 	return rslt;
 }

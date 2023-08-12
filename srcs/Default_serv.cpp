@@ -6,7 +6,7 @@
 /*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/16 19:10:28 by yaskour           #+#    #+#             */
-/*   Updated: 2023/07/24 22:05:24 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/08/09 17:45:43 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,8 +47,50 @@ Default_serv::Default_serv(void)
 	this->autoindex = 0;
 }
 
+void Default_serv::get_non_init_data(const Default_serv &server) 
+{
+	if (!this->listen.size())
+		this->listen = server.listen;
+
+	if (!this->index.size())
+		this->index = server.index;
+
+	if (!this->server_name.size())
+		this->server_name = server.server_name;
+
+	if (!this->status_page.size())
+		this->status_page = server.status_page;
+
+	if (!this->cgi_info.size())
+		this->cgi_info = server.cgi_info;
+
+	if (!this->host.size())
+		this->host = server.host;
+
+	if (!this->root.size())
+		this->root = server.root;
+
+	if (!this->client_max_body_size.size())
+		this->client_max_body_size = server.client_max_body_size;
+
+	if (this->upload == -1)
+		this->upload = server.upload;
+
+	if (this->autoindex == -1)
+		this->autoindex = server.autoindex;
+
+	if (!this->allow_methods.size())
+		this->allow_methods = server.allow_methods;
+
+	if (!this->retur.size())
+		this->retur = server.retur;
+}
+
 //this one for location
-Default_serv::Default_serv(int) {}
+Default_serv::Default_serv(int) {
+	this->upload = -1;
+	this->autoindex = -1;
+}
 
 //parsing
 void	Default_serv::take_off_default_setup(void)

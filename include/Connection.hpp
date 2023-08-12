@@ -10,11 +10,13 @@ class Connection
 {
 	int fd;
 	int port;
+	std::string ip;
 	std::vector<Server *> servers;
 	public:
 		Connection(std::vector<Server *>,std::pair<int,std::string>);
 		~Connection();
 		int get_fd();
+		std::string get_ip();
 		std::vector<Server *> get_servers();
 		int get_port();
 };
