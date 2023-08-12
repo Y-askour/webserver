@@ -35,15 +35,16 @@ CGI::CGI(Request &request, string body) : _request(request)
     av[1] = strdup(a.c_str());
     av[2] = NULL;
 
-    std::string path = this->_request.get_file_root() + "/upload"; 
-    string arr, response = "";
+    //std::string path = this->_request.get_file_root() + "/upload"; 
+    string response = "";
 
-    char buf[4096] = {0};
+    //char buf[4096] = {0};
     int status = 0;
     int pid, Pfd1[2];
     size_t ret;
+    std::string hld;
 
-    if (pipe(Pfd1) == -1 || av == NULL)
+    if (pipe(Pfd1) == -1)
     {
         _request.set_status_code("403");
         return;
@@ -53,67 +54,96 @@ CGI::CGI(Request &request, string body) : _request(request)
     if (pid == -1)
     {
         _request.set_status_code("403");
+        close(Pfd1[0]);
+        close(Pfd1[1]);
         return;
     }
 
     if (pid == 0)
     {
         if (chdir(_request.get_file_root().c_str()) == -1)
-        {
             exit(5);
-        }
 
         //here always remove the file
+        //std::remove("/tmp/file");
+        //int in = open("/tmp/file", O_CREAT | O_RDWR, 0666);
+        //if (in < 0)
+        //    exit(5);
+        //for (; body.length(); ) {
+        //    if (body.length() >= 1024) {
+        //        hld = body.substr(0, 1024);
+        //        body.erase(0, 1024);
+        //    }
+        //    else {
+        //        hld = body.substr(0, body.length());
+        //        body.erase(0, body.length());
+        //    }
+        //    if (write(in, hld.c_str(), hld.length()) == -1)
+        //        exit(5);
+        //    //if (write(in, &body.c_str()[i], 1) == -1)
+        //    //    exit(5);
+        //}
+        //old logic
+        //for (size_t i = 0; i != body.length(); i++) {
+        //    if (write(in, &body.c_str()[i], 1) == -1)
+        //        exit(5);
+        //}
+        //in = open("/tmp/file", O_CREAT | O_RDWR, 0666);
+        //if (in < 0)
+        //    exit(5);
+
+        //dup2(in, 0);
+        //close(in);
+
+        //FILE *file = tmpfile();
         std::remove("/tmp/file");
-        int in = open("/tmp/file", O_CREAT | O_RDWR, 0666);
-        if (in < 0)
-            exit(5);
-        for (size_t i = 0; i != body.length(); i++) {
-            if (write(in, &body.c_str()[i], 1) == -1)
-                exit(5);
+        FILE *file = std::fopen("/tmp/file", "w+");
+        if (file == NULL) {
+            _request.set_status_code("403");
+            return;
         }
-        in = open("/tmp/file", O_CREAT | O_RDWR, 0666);
-        if (in < 0)
-            exit(5);
-        dup2(in, 0);
-        close(in);
+        std::fputs(body.c_str(), file);
+        std::rewind(file);
+
+        dup2(::fileno(file), 0);
+        close(::fileno(file));
         dup2(Pfd1[1], 1);
         close(Pfd1[1]);
-        alarm(5);
+        //alarm(5);
         if(execve(av[0], av, _envToChar(this->_env)) == -1)
             exit(5);
     }
 
     waitpid(pid, &status, 0);
     status = WEXITSTATUS(status);
-    if (status == 5)
+    if (status == 5 || status != 0)
     {
         this->_request.set_status_code("403");
+        close(Pfd1[1]);
+        close(Pfd1[0]);
         return;
     }
-    if (WIFSIGNALED(status) || status != 0)
-    {
-        this->_request.set_status_code("403");
-        return ;
-    }
+    //if (WIFSIGNALED(status) || status != 0)
     if (status == -1)
     {
         _request.set_status_code("403");
         exit(EXIT_FAILURE);
+        //here close fd too
     }
 
     close(Pfd1[1]);
-
+    char buf;
     while ((ret = read(Pfd1[0], &buf, 1)) > 0) {
-        response += buf;
+        response.push_back(buf);
     }
+    //std::cout << "** " << response << std::endl;
     close(Pfd1[0]);
 
-    this->_request.set_status_code("200");
+    this->_request.set_status_code("201");
     this->_request.set_response_headers("Content-type: text/html");
     this->_request.set_response_body(response);
     //std::cout << response << std::endl;
-    // _request.set_response_body(response);
+    //_request.set_response_body(response);
 
 }
 
@@ -177,8 +207,8 @@ CGI::CGI(Request &_request) : _request(_request)
             _request.set_status_code("403");
             return;
         }
-        fputs(_request.get_body().c_str(), file);
-        rewind(file);
+        std::fputs(_request.get_body().c_str(), file);
+        std::rewind(file);
 
         dup2(::fileno(file), 0);
         close(::fileno(file));
@@ -279,7 +309,7 @@ void CGI::setEnv() {
     _env.push_back("DOCUMENT_ROOT=" + _request.get_file_root());
     _env.push_back("HTTP_COOKIE=" + _request.getHeader("Cookie"));
     //_env.push_back("UPLOAD_DIR=" + _request.get_file_root() + "/upload/");
-    _env.push_back("UPLOAD_DIR=/Users/amrakibe/goinfre/upload/");
+    _env.push_back("UPLOAD_DIR=/Users/hkaddour/goinfre/upload/");
 }
 
 bool CGI::isPython()

@@ -40,6 +40,9 @@
 # print("</body>")
 # print("</html>")
 
+
+
+####here the code
 import cgi
 import os
 import sys
@@ -76,6 +79,7 @@ else:
 #print("Content-type: text/html\n")
 print("<html>")
 print("<body>")
+#print("klsjkljsdkl")
 print("<p>%s</p>" % message)
 print("</body>")
 print("</html>")

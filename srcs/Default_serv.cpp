@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Default_serv.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yaskour <yaskour@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: yaskour <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/06/16 19:10:28 by yaskour           #+#    #+#             */
-/*   Updated: 2023/08/09 17:45:43 by yaskour          ###   ########.fr       */
+/*   Created: 2023/08/12 02:32:10 by yaskour           #+#    #+#             */
+/*   Updated: 2023/08/12 02:32:13 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -216,7 +216,27 @@ void	Default_serv::set_client_max_body_size(std::vector<std::string> data)
 {
 	if (check_if_number(data[0]))
 		throw ("Error: client_max_body_size only takes digit.");
+	//here check if long
+	for (; data[0].length() && data[0][0] == '0';)
+		data[0].erase(0, 1);
+	if (data[0].empty())
+		throw ("Error: client_max_body_size ranges from 1 to signed long long.");
+	else {
+		if (data[0].length() > 19)
+			throw ("Error: client_max_body_size ranges from 1 to signed long long.");
+		else if (data[0].length() == 19) {
+			std::string hld = max_body;
+			for (size_t i = 0; i != data[0].length(); i++) {
+				if (data[0][i] > hld[i])
+					throw ("Error: client_max_body_size ranges from 1 to signed long long.");
+				else if (data[0][i] < hld[i])
+					break ;
+			}
+		}
+	}
 	this->client_max_body_size = data[0];
+	//std::cout << this->client_max_body_size << std::endl;
+	//exit(0);
 	//check it if the number is valide
 }
 

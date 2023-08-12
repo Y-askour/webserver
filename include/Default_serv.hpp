@@ -3,12 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   Default_serv.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hkaddour <hkaddour@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: yaskour <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/06/10 10:34:30 by hkaddour          #+#    #+#             */
-/*   Updated: 2023/08/09 17:29:12 by yaskour          ###   ########.fr       */
+/*   Created: 2023/08/12 02:32:28 by yaskour           #+#    #+#             */
+/*   Updated: 2023/08/12 02:32:29 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 #pragma once
 
@@ -17,6 +18,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#define max_body "9223372036854775807"
 
 class Default_serv
 {
