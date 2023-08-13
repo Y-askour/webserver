@@ -18,12 +18,10 @@ class Request
 	std::string ip;
 	Server* server;
 	std::string request_buf;
-	size_t n_bytes;
 	size_t request_stat;
 
 	// request
 	std::string request_line;
-	std::string request_uri;
 	std::map<std::string, std::string> headers;
 	std::string body;
 	
@@ -79,7 +77,6 @@ class Request
 
 		// setters
 		void set_request_buf(std::string buf);
-		void set_n_bytes(size_t n);
 		void set_response_body(std::string body);
 		void set_response_headers(std::string headers);
 		void set_status_code(std::string status);
@@ -90,7 +87,7 @@ class Request
 		std::string is_method_allowed_in_location(Default_serv *location);
 		
 		//parsing the request
-		void	parssing_the_request(std::string buf,size_t s);
+		void	parssing_the_request(std::string buf);
 		void	parse_request_line(void);
 		void	parse_header(void);
 		void	parse_body(void);
@@ -128,4 +125,8 @@ class Request
 		std::vector<Server *> find_servers_based_on_port(int port);
 		//chunked
 		void	fix_chunked_body(void);
+		
+		void	normalize_uri(void);
+		std::string	fix_location_slashes(std::string location);
+		void	fix_uri_slashes(std::string &src);
 };

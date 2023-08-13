@@ -9,8 +9,12 @@ SRCS = $(addprefix srcs/, main.cpp Parsing.cpp tokenizer.cpp lexer.cpp \
 			 parse_mime_types.cpp Connection.cpp Request.cpp /cgi-bin/cgi.cpp)
 
 OBJS = $(SRCS:.cpp=.o)
+upload= /Users/yaskour/goinfre/upload/
 
-all: $(NAME)
+all: $(NAME) $(upload)
+
+$(upload):
+	@mkdir $@
 
 $(NAME): $(OBJS)
 	$(CC) $^ -o $@

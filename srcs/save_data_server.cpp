@@ -36,7 +36,6 @@ void	Parsing::check_wish_directive(int check, std::vector<std::string> data)
 				((*(this->servers.end() - 1))->*serv_func[i])(data);
 			else
 			 ((*loc->second).*serv_func[i])(data);
-				//(*(std::prev((*(this->servers.end() - 1))->get_location().end()))->second.*serv_func[i])(data);
 			return ;
 		}
 	}
@@ -51,19 +50,6 @@ void	Parsing::parse_directive(int check)
 	this->check_wish_directive(check, data);
 }
 
-void Parsing::delete_last_slash(std::string &str)
-{
-	size_t pos;
-	if (str.size() > 1)
-	{
-		while ((pos  = str.rfind('/')) != std::string::npos)
-		{
-			if (pos == 0)
-				break;
-			str.erase(pos,1);
-		}
-	}
-}
 
 void	Parsing::parse_location(void)
 {
@@ -71,7 +57,6 @@ void	Parsing::parse_location(void)
 	Location	*location = new Location();
 	std::vector<std::pair<t_tokens, std::string> >::iterator	iter;
 	this->hld_location_name = (this->begin + 1)->second;
-	this->delete_last_slash(this->hld_location_name);
 	std::pair<std::string, Location*> hold(this->hld_location_name, location);
 	this->servers_itr = std::prev(this->get_servers().end());
 

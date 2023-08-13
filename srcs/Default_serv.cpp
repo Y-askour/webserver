@@ -6,7 +6,7 @@
 /*   By: yaskour <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/12 02:32:10 by yaskour           #+#    #+#             */
-/*   Updated: 2023/08/12 02:32:13 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/08/13 17:51:51 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 Default_serv::Default_serv(void)
 {
 	this->listen.push_back(8080);
-	//this->index.push_back("index.html");
 	this->server_name.push_back("localhost");
 
 	//200
@@ -38,10 +37,11 @@ Default_serv::Default_serv(void)
 	// 500
 	this->status_page.push_back(std::make_pair(500, "status_page/500.html"));
 	this->status_page.push_back(std::make_pair(501, "status_page/501.html"));
-	this->status_page.push_back(std::make_pair(505, "status_page/501.html"));
+	this->status_page.push_back(std::make_pair(505, "status_page/505.html"));
 
 	this->host = "127.0.0.1";
 	this->root = "var/www/";
+	this->allow_methods.push_back("GET");
 	this->client_max_body_size = "10000";
 	this->upload = 0;
 	this->autoindex = 0;
@@ -97,8 +97,6 @@ void	Default_serv::take_off_default_setup(void)
 {
 	if (this->listen.size() > 1)
 		this->listen.erase(this->listen.begin());
-	//if (this->index.size() > 1)
-	//	this->index.erase(this->index.begin());
 	if (this->server_name.size() > 1)
 		this->server_name.erase(this->server_name.begin());
 	if (this->allow_methods.size() > 1)
@@ -141,10 +139,12 @@ int	Default_serv::check_if_number(std::string data)
 
 void	Default_serv::check_status_code(std::string data)
 {
-	if (data.compare("200") && data.compare("301") && data.compare("400") \
-			&& data.compare("404") && data.compare("405") && data.compare("503") \
+	if (data.compare("201") && data.compare("204") && data.compare("301") \
+			&& data.compare("400") && data.compare("403") && data.compare("404") \
+			&& data.compare("405") && data.compare("409") && data.compare("413") \
+			&& data.compare("414") && data.compare("500") && data.compare("501") \
 			&& data.compare("505"))
-		throw ("Error: wrong status code, allow code [200 - 301 - 400 - 404 - 405 - 503 - 505].");
+		throw ("Error: wrong status code, allow code [201 - 204 - 301 - 400 - 403 - 404 - 405 - 409 - 413 - 414 - 500 - 501 - 505].");
 }
 
 //setters
@@ -172,21 +172,32 @@ void	Default_serv::set_server_name(std::vector<std::string> data)
 void	Default_serv::set_status_page(std::vector<std::string> data)
 {
 	check_status_code(data[0]);
-	if (atoi(data[0].c_str()) == 200)
+	if (atoi(data[0].c_str()) == 201)
 		this->status_page[0].second = data[1];
-	else if (atoi(data[0].c_str()) == 301)
+	else if (atoi(data[0].c_str()) == 204)
 		this->status_page[1].second = data[1];
-	else if (atoi(data[0].c_str()) == 400)
+	else if (atoi(data[0].c_str()) == 301)
 		this->status_page[2].second = data[1];
-	else if (atoi(data[0].c_str()) == 404)
+	else if (atoi(data[0].c_str()) == 400)
 		this->status_page[3].second = data[1];
-	else if (atoi(data[0].c_str()) == 405)
+	else if (atoi(data[0].c_str()) == 403)
 		this->status_page[4].second = data[1];
-	else if (atoi(data[0].c_str()) == 503)
+	else if (atoi(data[0].c_str()) == 404)
 		this->status_page[5].second = data[1];
-	else if (atoi(data[0].c_str()) == 505)
+	else if (atoi(data[0].c_str()) == 405)
 		this->status_page[6].second = data[1];
-	//maybe here check the path file if exist too
+	else if (atoi(data[0].c_str()) == 409)
+		this->status_page[7].second = data[1];
+	else if (atoi(data[0].c_str()) == 413)
+		this->status_page[8].second = data[1];
+	else if (atoi(data[0].c_str()) == 414)
+		this->status_page[9].second = data[1];
+	else if (atoi(data[0].c_str()) == 500)
+		this->status_page[10].second = data[1];
+	else if (atoi(data[0].c_str()) == 501)
+		this->status_page[11].second = data[1];
+	else if (atoi(data[0].c_str()) == 505)
+		this->status_page[12].second = data[1];
 }
 
 void	Default_serv::set_cgi_info(std::vector<std::string> data)
@@ -204,7 +215,6 @@ void	Default_serv::set_cgi_info(std::vector<std::string> data)
 void	Default_serv::set_host(std::vector<std::string> data)
 {
 	this->host = data[0];
-	//here check if it's an ip addres by the socket syscall
 }
 
 void	Default_serv::set_root(std::vector<std::string> data)
@@ -216,7 +226,6 @@ void	Default_serv::set_client_max_body_size(std::vector<std::string> data)
 {
 	if (check_if_number(data[0]))
 		throw ("Error: client_max_body_size only takes digit.");
-	//here check if long
 	for (; data[0].length() && data[0][0] == '0';)
 		data[0].erase(0, 1);
 	if (data[0].empty())
@@ -235,9 +244,6 @@ void	Default_serv::set_client_max_body_size(std::vector<std::string> data)
 		}
 	}
 	this->client_max_body_size = data[0];
-	//std::cout << this->client_max_body_size << std::endl;
-	//exit(0);
-	//check it if the number is valide
 }
 
 void	Default_serv::set_upload(std::vector<std::string> data)
@@ -283,7 +289,6 @@ void	Default_serv::set_allow_methods(std::vector<std::string> data)
 void	Default_serv::set_return(std::vector<std::string> data)
 {
 	check_status_code(data[0]);
-	//for (int	i = 0; i < static_cast<int>(this->retur.size()); i++)
 	for (int	i = 0; i < static_cast<int>(this->retur.size()); i++)
 	{
 		if (this->retur[i].first == atoi(data[0].c_str()))

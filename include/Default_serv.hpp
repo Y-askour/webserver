@@ -6,7 +6,7 @@
 /*   By: yaskour <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/12 02:32:28 by yaskour           #+#    #+#             */
-/*   Updated: 2023/08/12 02:32:29 by yaskour          ###   ########.fr       */
+/*   Updated: 2023/08/13 17:43:03 by yaskour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,8 +78,5 @@ class Default_serv
 		std::vector<std::string> get_allow_methods(void) const;
 		std::vector<std::pair<int, std::string> >	get_retur(void) const;
 
-		//here maybe i will make a function with a string parameter for example "listen"
-		//it returns 1 if exists and 0 if not to check if u will work with server var or location
-		//function here that put status and path in a pair and adds it to status_page var.
 		~Default_serv(void);
 };

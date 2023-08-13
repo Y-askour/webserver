@@ -1,6 +1,12 @@
-- constuctor to copy from server to location
-- normalize uri //////
 - limit request body length and check it in the body
 - upload without chuncked and upload with chuncked (transfer-encoding)
 - fix function substr of mine segfault
 -*** fix status pages add the other and also check if the files not exists
+
+check if status errors exsist
+check if socket file symbolic links to open in browser
+add status pages code all in parsing
+location /
+free amine tkhawr
+forbidden functions malloc in cgi
+handle alot of request upload

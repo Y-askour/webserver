@@ -84,18 +84,19 @@ void Data::run_server()
 {
 	struct sockaddr client_struct;
 	struct pollfd assign_poll;
+	std::string request;
 
 	std::vector<Connection>::iterator it = this->connections.begin();
 	while (it != this->connections.end())
 	{
 		assign_poll.fd = (*it).get_fd();
 		assign_poll.events = POLLIN;
-		this->test.push_back(assign_poll);
+		this->mantained_fds.push_back(assign_poll);
 		it++;
 	}
 	while (1)
 	{
-		int ret = poll(&this->test[0],this->test.size(),1000);
+		int ret = poll(&this->mantained_fds[0],this->mantained_fds.size(),1000);
 		
 		if (ret == -1)
 		{
@@ -104,74 +105,73 @@ void Data::run_server()
 		}
 		
 		size_t i = 0;
-		while(i < this->test.size())
+		while(i < this->mantained_fds.size())
 		{
-			if (this->test[i].revents  & POLLHUP)
+			if (this->mantained_fds[i].revents  & POLLHUP)
 			{
-				close(this->test[i].fd);
-				this->test.erase(this->test.begin() + i);
+				close(this->mantained_fds[i].fd);
+				this->mantained_fds.erase(this->mantained_fds.begin() + i);
 				continue;
 			}
-			else if (this->test[i].revents & POLLIN)
+			else if (this->mantained_fds[i].revents & POLLIN)
 			{
-				if (this->is_a_connection(this->test[i].fd))
+				if (this->is_a_connection(this->mantained_fds[i].fd))
 				{
 					socklen_t addr_size = sizeof client_struct;
-					int client_fd = accept(this->test[i].fd, &client_struct,&addr_size);
-					Request req(*this->get_connection_by_fd(this->test[i].fd),client_fd,this->mime_types_parse);
+					int client_fd = accept(this->mantained_fds[i].fd, &client_struct,&addr_size);
+					Request req(*this->get_connection_by_fd(this->mantained_fds[i].fd),client_fd,this->mime_types_parse);
 					this->req_res.push_back(req);
 
 					if (client_fd < 0)
 					{
 						perror("webserv(accept)");
-						return ;
+						continue;
 					}
 					assign_poll.fd = client_fd;
 					assign_poll.events = POLLIN;
-					this->test[i].revents = 0;
-					this->test.push_back(assign_poll);
+					this->mantained_fds[i].revents = 0;
+					this->mantained_fds.push_back(assign_poll);
 				}
 				else 
 				{
-					Request *younes = this->get_request_by_fd(this->test[i].fd);
+					Request *req = this->get_request_by_fd(this->mantained_fds[i].fd);
 
 					char buf[1024];
 					std::string	hld;
-					std::string request;
-					size_t s = recv(this->test[i].fd,buf, 1024, 0);
+					size_t s = recv(this->mantained_fds[i].fd,buf, 1024, 0);
 					for (size_t i = 0; i != s; i++)
 						hld.push_back(buf[i]);
 					if (s < 0)
 					{
-						close(this->test[i].fd);
-						this->delete_request(this->test[i].fd);
-						this->test.erase(this->test.begin() + i);
+						close(this->mantained_fds[i].fd);
+						this->delete_request(this->mantained_fds[i].fd);
+						this->mantained_fds.erase(this->mantained_fds.begin() + i);
 						continue;
 					}
 					if (!this->check) {
 						request.append(hld);
-						if (this->check_is_headers_done(request))
-							younes->parssing_the_request(request, s);
+						if (this->check_is_headers_done(request)) {
+							req->parssing_the_request(request);
+							request.clear();
+						}
 					}
 					else
-						younes->parssing_the_request(hld, s);
-					if (younes->get_request_stat() == 2)
-						this->test[i].events = POLLOUT;
+						req->parssing_the_request(hld);
+					if (req->get_request_stat() == 2)
+						this->mantained_fds[i].events = POLLOUT;
 				}
 			}
-			else if (this->test[i].revents & POLLOUT)
+			else if (this->mantained_fds[i].revents & POLLOUT)
 			{
-				Request *younes = this->get_request_by_fd(this->test[i].fd);
-				// i need to make this part work with the Request class
+				Request *req = this->get_request_by_fd(this->mantained_fds[i].fd);
 
-				if (send(this->test[i].fd,younes->get_response_body().c_str(),younes->get_response_body().length(),0) == -1)
-				{
+				if (send(this->mantained_fds[i].fd,req->get_response_body().c_str(),req->get_response_body().length(),0) == -1)
 					perror("webserv(send)");
-					return ;
-				}
-				close(this->test[i].fd);
-				this->delete_request(this->test[i].fd);
-				this->test.erase(this->test.begin() + i);
+				this->check = 0;
+				close(this->mantained_fds[i].fd);
+				request.clear();
+				this->delete_request(this->mantained_fds[i].fd);
+				this->mantained_fds.erase(this->mantained_fds.begin() + i);
 				continue;
 			}
 			i++;

@@ -36,7 +36,6 @@ class	Parsing : public Data
 	std::string hld_location_name;
 
 	public :
-	//here i should add copy constructer and shiit
 		Parsing(void);
 		Parsing(std::string file);
 		void	turn_whitespaces_to_space(void);
@@ -76,6 +75,5 @@ class	Parsing : public Data
 		void	last_check_servers(void);
 		//this is for default server building
 		void	make_default_server(void);
-		void 	delete_last_slash(std::string &str);
 		~Parsing(void);
 };

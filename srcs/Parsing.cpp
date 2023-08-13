@@ -1,11 +1,9 @@
 #include "../include/Parsing.hpp"
 
-Parsing::Parsing(void)
-{
+Parsing::Parsing(void) {
 }
 
-Parsing::Parsing(std::string file) : config_file(file)
-{
+Parsing::Parsing(std::string file) : config_file(file) {
 	std::pair<int[3], std::string> data;
 	std::string	directives = "listen host server_name status_page return root index allow_methods client_max_body_size autoindex cgi_info upload ";
 
@@ -25,15 +23,13 @@ Parsing::Parsing(std::string file) : config_file(file)
 	this->parse_mime_types();
 }
 
-void	Parsing::make_default_server(void)
-{
+void	Parsing::make_default_server(void) {
 	this->parse_mime_types();
 	Server	*serv = new Server();
 	this->servers.push_back(serv);
 }
 
-void	Parsing::take_off_comments(void)
-{
+void	Parsing::take_off_comments(void) {
 	size_t	found;
 
 	while (1)
@@ -50,8 +46,7 @@ void	Parsing::take_off_comments(void)
 	}
 }
 
-void	Parsing::strtrim(void)
-{
+void	Parsing::strtrim(void) {
 	int	start, end;
 	for (start = 0; isspace(this->input.c_str()[start]); start++)
 		;
@@ -60,29 +55,23 @@ void	Parsing::strtrim(void)
 	this->input = this->input.substr(start, (end + 1) - start);
 }
 
-void	Parsing::turn_whitespaces_to_space(void)
-{
+void	Parsing::turn_whitespaces_to_space(void) {
 	this->strtrim();
-	for (int	i = 0; this->input[i]; i++)
-	{
+	for (int	i = 0; this->input[i]; i++) {
 		if (isspace(this->input.c_str()[i]))
 			this->input[i] = ' ';
 	}
 }
 
-void	Parsing::last_check_servers(void)
-{
-	for (int	i = 0; i < static_cast<int>(this->servers.size()); i++)
-	{
+void	Parsing::last_check_servers(void) {
+	for (int	i = 0; i < static_cast<int>(this->servers.size()); i++) {
 		this->servers[i]->take_off_default_setup();
 		this->servers[i]->check_server_setup_duplicate();
 	}
 }
 
-void	Parsing::parse_file(void)
-{
-	try
-	{
+void	Parsing::parse_file(void) {
+	try {
 		std::ifstream	in;
 	
 		in.open(this->config_file);
@@ -99,17 +88,14 @@ void	Parsing::parse_file(void)
 		this->last_check_servers();
 		in.close();
 	}
-	catch (const char *error)
-	{
+	catch (const char *error) {
 		std::cerr << error << std::endl;
 		exit(1);
 	}
 }
 
-Parsing::~Parsing(void)
-{
+Parsing::~Parsing(void) {
 	std::vector<Server*>::iterator itr;
 	for (itr = this->servers.begin(); itr != this->servers.end(); itr++)
 		delete *itr;
-	//destructer
 }

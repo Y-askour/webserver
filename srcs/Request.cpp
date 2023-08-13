@@ -20,11 +20,9 @@ Request::Request(Connection &other,int fd,std::map<std::string,std::string> mime
 	this->fd = fd;
 	this->mime_types = mime;
 	this->request_stat  = 0;
-	this->n_bytes = 0;
 	this->servers = (other.get_servers());
 	this->port = (other.get_port());
 	this->ip = other.get_ip();
-	//i just add it 
 	this->request_chunked = false;
 	this->length_chunked = 0;
 }
@@ -49,10 +47,6 @@ void Request::set_request_buf(std::string buf)
 	this->request_buf.append(buf);
 }
 
-void Request::set_n_bytes(size_t n)
-{
-	this->n_bytes += n;
-}
 
 std::vector<std::string>    Request::split(std::string input, char sp) {
     std::vector<std::string>    header;
@@ -69,8 +63,6 @@ std::vector<std::string>    Request::split(std::string input, char sp) {
     }
     return header;
 }
-
-//parsing request func
 
 bool	Request::check_uri_character(char c) {
 	std::string	allow = URI;
@@ -89,38 +81,37 @@ void	Request::parse_request_line(void) {
 	this->request_buf.erase(0, pos + 1);
 	if (hld.back() == '\r')
 		hld.erase(hld.length() - 1);
+	if (hld.empty())
+		throw "400";
 	while (hld.back() == ' ')
 		hld.erase(hld.length() - 1);
 	if (hld.at(0) == ' ')
 		throw "400";
 	req = this->split(hld, ' ');
-	if (req.size() > 3)
+	if (req.size() != 3)
 		throw "400";
 	this->method = req.at(0);
+
 	//here take off the query ?ll=lll
 	pos = (req.at(1).find('?') != req.at(1).npos) ? req.at(1).find('?') : req.at(1).length();
 	this->uri = req.at(1).substr(0, pos);
-	this->request_uri = req.at(1).substr(0, pos);
 	req.at(1).erase(0, ((req.at(1)[pos] == '?') ? pos + 1 : pos));
 
 	this->query = req.at(1).substr(0, req.at(1).length());
 	this->http_version = req.at(2);
+
 	//check if method is correct
-
 	if (this->method.compare("GET") && this->method.compare("POST") && this->method.compare("DELETE"))
-		throw "400";
+		throw "501";
 
-	//here check url uncoding if character is right
 	if (this->uri.length() > 2048)
 		throw "414";
-	//here also check ? and save the query of the uri
 	for (std::string::iterator itr = this->uri.begin(); itr != this->uri.end(); itr++) {
 		if (check_uri_character(*itr))
 			throw "400";
 	}
-	//here youness should check if http/1.1
 	if (this->http_version.compare("HTTP/1.1"))
-		throw "400";
+		throw "505";
 }
 
 void	Request::check_header_variables(void) {
@@ -136,17 +127,6 @@ void	Request::check_header_variables(void) {
 		throw "400";
 }
 
-//this one should be fixed
-//std::string	Request::substr_sp(std::string path, char sp) {
-//	size_t	i;
-//	size_t	j;
-//
-//	for (i = 0; (i < (path.length() -1) && path.at(i) == sp);)
-//		i++;
-//	for (j = (path.length() - 1); ( (path.length() -1) && path.at(j) == sp);)
-//		j--;
-//	return (path.substr(i, (j - i) + 1));
-//}
 std::string	Request::substr_sp(std::string path, char sp) {
 	std::string::iterator	itr;
 
@@ -191,7 +171,6 @@ void	Request::parse_header(void) {
 		this->headers.insert(var);
 	}
 	this->check_header_variables();
-	//this one have a segfault
 	this->assign_server_base_on_server_name();
 }
 
@@ -217,7 +196,6 @@ void	Request::fix_chunked_body(void) {
 		find = this->body.find("\r\n");
 		if (find == this->body.npos)
 			throw "400";
-		//if (this->body.length() < this->length_chunked)
 		if ((this->body.substr(0, find)).length() < this->length_chunked)
 			throw "400";
 		hld_body.append(this->body.substr(0, find));
@@ -244,25 +222,53 @@ void	Request::parse_body(void) {
 			this->request_stat = 2;
 		}
 	}
-	if (!this->request_chunked && itr != this->headers.end())
+	else if (!this->request_chunked && itr != this->headers.end())
 	{
 		this->body.append(this->request_buf);
-		if ((size_t)(std::atoi(itr->second.c_str())) <= this->body.size())
+		if ((size_t)(std::atoi(itr->second.c_str())) == this->body.size())
 			this->request_stat = 2;
 	}
-	//still need to fix the range of client max body size in the parsing
-	//std::cout << this->body.length() << std::endl;
-	//std::cout << server->get_client_max_body_size().c_str() << std::endl;
-	if (this->body.length() > static_cast<size_t>(atoll(server->get_client_max_body_size().c_str())))
-		throw "413";
 }
 
-void Request::parssing_the_request(std::string buf,size_t s)
+void	Request::fix_uri_slashes(std::string &src) {
+	std::vector<std::string>	hld;
+	std::string	hld1 = src;
+
+	hld = this->split(this->substr_sp(src, '/'), '/');
+	src.clear();
+	for (std::vector<std::string>::iterator itr = hld.begin(); itr != hld.end(); itr++) {
+		src.append("/");
+		src.append(*itr);
+	}
+	if (hld1.back() == '/')
+		src.append("/");
+}
+
+std::string	Request::fix_location_slashes(std::string location) {
+	std::string hld = location;
+
+	for (int i = location.length() - 1; location.length() && location[i] == '/'; i = location.length() - 1)
+		location.erase(i);
+	if (!location.length())
+		return hld;
+	return location;
+}
+
+void	Request::normalize_uri(void) {
+	size_t	i;
+	std::string hld_loc;
+
+	for (i = 0; this->uri[i] && this->uri[i] == '/'; i++)
+		;
+	if (i == this->uri.length())
+		this->uri = "/";
+	else
+		this->fix_uri_slashes(this->uri);
+}
+
+void Request::parssing_the_request(std::string buf)
 {
-	//hicham code
 	try {
-		//we don't need this set_n_bytes
-		this->set_n_bytes(s);
 		this->set_request_buf(buf);
 		if (!this->request_stat) 
 		{
@@ -275,16 +281,13 @@ void Request::parssing_the_request(std::string buf,size_t s)
 			return ;
 	}
 	catch (const char *status) {
-		//std::cout << "younes" << std::endl;
+		this->assign_server_base_on_server_name();
 		this->request_stat = 2;
 		this->status = status;
 		this->create_the_response();
 		return ;
 	}
-	//std::cout << this->body << std::endl;
-	//return ;
-	//exit(1);
-	// request flow 
+	this->normalize_uri();
 	if (status.empty())
 	{
 		Default_serv *location;
@@ -304,9 +307,14 @@ void Request::parssing_the_request(std::string buf,size_t s)
 			t = this->is_Location_have_redirection(status_location.first);
 			location = status_location.first;
 		}
-		// no redirection
 		if (!t.first)
 		{
+			if (this->body.length() > static_cast<size_t>(atoll(location->get_client_max_body_size().c_str())))
+			{
+				this->status = "413";
+				this->create_the_response();
+				return ;
+			}
 			this->status = this->is_method_allowed_in_location(location);
 			if (status.empty())
 			{
@@ -316,12 +324,6 @@ void Request::parssing_the_request(std::string buf,size_t s)
 					this->POST_METHOD(status_location);
 				else if (this->method.compare("DELETE") == 0)
 					this->DELETE_METHOD(status_location);
-				else 
-				{
-					this->status = "501";
-					this->create_the_response();
-				}
-				// check what method
 				return ;
 			}
 			// method is not allowed
@@ -336,7 +338,6 @@ void Request::parssing_the_request(std::string buf,size_t s)
 		this->create_the_response();
 		return ;
 	}
-	//this->create_the_response();
 }
 
 void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
@@ -360,15 +361,14 @@ void Request::GET_METHOD(std::pair<Server* , Default_serv *>serv)
 			// directory 
 			if (S_ISDIR(buf.st_mode))
 			{
-				if (this->request_uri[this->request_uri.size() - 1] == '/')
+				if (this->uri[this->uri.size() - 1] == '/')
 					this->check_index_files(location);
 				else 
 				{
-					// this is a directory without a / in end
 					// redirect with the path with / in end
 					this->status = "301";
-					this->request_uri += '/';
-					this->response_headers += "Location: " + this->request_uri + "\r\n";
+					this->uri += '/';
+					this->response_headers += "Location: " + this->uri + "\r\n";
 					this->create_the_response();
 				}
 			}
@@ -394,18 +394,14 @@ int Request::location_support_upload(Default_serv *location)
 
 void Request::POST_METHOD(std::pair<Server *,Default_serv *> serv)
 {
-	//std::cout << "gg" << std::endl;
 	Default_serv *location;
 	if (serv.second)
 		location = serv.second;
 	else
 		location = serv.first;
-	//std::cout << "gg" << std::endl;
 	this->get_requested_resource(serv,&location);
-	//std::cout << this->location_support_upload(location) << std::endl;
 	if (this->location_support_upload(location) == 1)
 	{
-		std::cout << "ana f upload" << std::endl;
 		CGI a(*this, this->body);
 		if (status.compare("201"))
 			return this->create_the_response();
@@ -413,7 +409,6 @@ void Request::POST_METHOD(std::pair<Server *,Default_serv *> serv)
 		this->fill_status_line();
 		this->fill_headers();
 		this->join_reponse_parts();
-		//std::cout << "$$ " << this->response << std::endl;
 		return ;
 	}
 	int ret = access(this->file_to_read.c_str(),R_OK);
@@ -430,7 +425,7 @@ void Request::POST_METHOD(std::pair<Server *,Default_serv *> serv)
 		{
 			if (S_ISDIR(buf.st_mode)) // directory
 			{
-				if (this->request_uri[this->request_uri.size() - 1] == '/')
+				if (this->uri[this->uri.size() - 1] == '/')
 				{
 					std::vector<std::string> indexs = location->get_index();
 					this->check_index_files(location);
@@ -438,8 +433,8 @@ void Request::POST_METHOD(std::pair<Server *,Default_serv *> serv)
 				else
 				{
 					this->status = "301";
-					this->request_uri += '/';
-					this->response_headers += "Location: " + this->request_uri + "\r\n";
+					this->uri += '/';
+					this->response_headers += "Location: " + this->uri + "\r\n";
 					this->create_the_response();
 				}
 			}
@@ -507,7 +502,7 @@ void	Request::DELETE_METHOD(std::pair<Server *, Default_serv *> serv)
 		{
 			if (S_ISDIR(buf.st_mode)) // directory
 			{
-				if (this->request_uri[this->request_uri.size() - 1] == '/')
+				if (this->uri[this->uri.size() - 1] == '/')
 				{
 					std::vector<std::pair<std::string,std::string> > b = location->get_cgi_info();
 					if (b.size() > 0)
@@ -605,7 +600,6 @@ void Request::create_auto_index()
 	this->response_body = auto_index;
 }
 
-//std::vector<std::string,std::string> Request::split_ext(std::string ext);
 std::vector<std::string>	Request::split_ext(std::string ext)
 {
 	std::vector<std::string> exts;
@@ -664,7 +658,6 @@ std::string Request::get_response_body()
 
 void Request::fill_headers()
 {
-	// i need to check what type of content
 	this->response_headers += "Content-Type: " + this->file_type + "\r\n";
 	this->response_headers += "Content-Length: " + std::to_string(this->response_body.length()) + "\r\n";
 	this->response_headers += "\r\n";
@@ -706,12 +699,12 @@ void Request::fill_status_line()
 	else if (status_code == 501)
 		this->status_line += "Not Implemented\r\n";
 	else if (status_code == 505)
-		this->status_line += "Not Implemented\r\n";
+		this->status_line += "Version Not Supported\r\n";
 }
 
 void Request::fill_body(int status)
 {
-	if ( status == 204 || status >=  300)
+	if (status != 200)
 	{
 		// getting the html and fill the body
 		this->file_type = "text/html";
@@ -729,6 +722,8 @@ void Request::fill_body(int status)
 			ss << f.rdbuf();
 			this->response_body = ss.str();
 		}
+		else 
+			this->response_body = "<html><body><h1>" + to_string(status) + "</h1></body></html>";
 	}
 	else 
 	{
@@ -745,52 +740,36 @@ void Request::fill_body(int status)
 std::pair<Server *,Default_serv *> Request::get_matched_location_for_request()
 {
 	std::map<std::string, Location *> l = this->server->get_location();
-
 	std::map<std::string, Location *>::iterator it = l.begin();
+	std::string	hld_loc;
+	std::string hld_uri;
+
+	if (this->uri.size() > 1)
+		hld_uri = this->uri.back() == '/' ? this->uri.substr(0, this->uri.length() - 1) : this->uri;
+	else
+		hld_uri = this->uri;
+
 	while (it != l.end())
 	{
-		size_t yo = this->uri.find((*it).first,0);
-		if (yo == 0)
-			break;
+		hld_loc = fix_location_slashes(it->first);
+		if (hld_loc.front() != '/')
+			hld_loc.insert(0, "/");
+		if (!hld_loc.compare(hld_uri))
+			break ;
 		it++;
 	}
-	std::map<std::string,Location *>::iterator re = it;
 
+	std::map<std::string,Location *>::iterator re = it;
 	std::pair<Server *,Default_serv *> result;
 	result.first = this->server;
 	result.second = NULL;
+
 	// find the location
 	if (re != l.end())
 	{
-		this->uri.erase(0,(*re).first.size());
-		int i = 0;
-		while (this->uri[i]  && (this->uri[i] == '/') )
-		{
-			this->uri.erase(i,1);
-		}
-
-		i = this->uri.size() - 1;
-		while (i >= 0 && this->uri[i] && (this->uri[i] == '/') )
-		{
-			this->uri.erase(i,1);
-			i = this->uri.size() - 1;
-		}
 		result.second = re->second;
 		return (result);
 	}
-
-	int i = 0;
-	while (this->uri[i]  && (this->uri[i] == '/') )
-	{
-		this->uri.erase(i,1);
-	}
-
-	//i = this->uri.size() - 1;
-	//while (i >= 0 && this->uri[i] && (this->uri[i] == '/') )
-	//{
-	//	this->uri.erase(i,1);
-	//	i = this->uri.size() - 1;
-	//}
 	return (result);
 }
 
@@ -899,7 +878,7 @@ void Request::check_cgi(Default_serv *location,std::string file)
 				this->status = "200";
 				this->file_to_read = file;
 				this->cgi = cgi[i];
-				// i need to check cgi errors
+
 				CGI aa(*this);
 				if (status.compare("200"))
 					return this->create_the_response();
@@ -981,23 +960,32 @@ size_t Request::get_request_stat()
 
 void Request::assign_server_base_on_server_name()
 {
-	// i need to bind the host to the socket
-	//std::vector<Server *>::iterator it = this->servers.begin();
 	std::map<std::string,std::string>::iterator host = this->headers.find("Host");
+	std::pair<std::string,std::string> splited_host;
 
 	if (host == this->headers.end())
-		return ;
-	std::pair<std::string,std::string> splited_host;
-	size_t i = host->second.find(":");
-
-	splited_host.first = host->second.substr(0,i);
-	splited_host.second = std::to_string(this->port);
-
-	if (i != host->second.npos)
-		splited_host.second = host->second.substr(++i,host->second.npos);
+	{
+		splited_host.first = this->ip;
+		splited_host.second = std::to_string(this->port);
+	}
+	else
+	{
+		size_t i = host->second.find(":");
+		if (i != host->second.npos) 
+		{
+			splited_host.first = host->second.substr(0,i);
+			splited_host.second = std::to_string(this->port);
+		}
+		else
+		{
+			splited_host.first = host->second;
+			if (splited_host.first.empty())
+				splited_host.first = this->ip;
+			splited_host.second = std::to_string(this->port);
+		}
+	}
 
 	// get all servers with the same port and ip
-	std::cout <<   "ip : "<< this->ip << std::endl;
 	std::vector<Server *> server_name = this->find_servers_based_on_port(port);
 
 	for (std::vector<Server*>::iterator it = server_name.begin();it != server_name.end();it++)
@@ -1008,30 +996,21 @@ void Request::assign_server_base_on_server_name()
 		{
 			if (!(*y).compare(splited_host.first))
 			{
-				// if server_name match work with this server config
 				this->server = *it;
 				return ;
 			}
 		}
 	}
-
-
-// /////////////////////////////////
-
-	
 	for (std::vector<Server *>::iterator yo = server_name.begin(); yo != server_name.end();yo++)
 	{
 		std::string host_ip = (*yo)->get_host();
 		if (!host_ip.compare(splited_host.first))
 		{
 			this->server = *yo;
-			std::cout <<   "index : "<< this->server->get_index()[0] << std::endl;
 			return ;
 		}
 	}
-	// i need to check the host now
 	this->server = server_name[0];
-	std::cout <<   "index : "<< this->server->get_index()[0] << std::endl;
 }
 
 std::vector<Server *> Request::find_servers_based_on_port(int port)

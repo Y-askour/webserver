@@ -31,7 +31,7 @@ class Data
 
 
 	// all mantained fds
-	std::vector<struct pollfd> test;
+	std::vector<struct pollfd> mantained_fds;
 
 
 	std::vector<Request> req_res;

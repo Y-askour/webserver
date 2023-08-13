@@ -13,9 +13,7 @@ Connection::Connection(std::vector<Server *> servers,std::pair<int,std::string> 
 	}
 	host_addr.sin_family = AF_INET;
 	host_addr.sin_port = htons(host_port.first);
-	// i need to add host here
 	host_addr.sin_addr.s_addr = inet_addr(host_port.second.c_str());
-	//host_addr.sin_addr.s_addr = inet_addr("10.12.4.7");
 	int host_addrlen = sizeof(host_addr);
 
 	if (setsockopt(listen_fd,SOL_SOCKET, SO_REUSEADDR,&yes,sizeof(int)) != 0)
@@ -25,7 +23,6 @@ Connection::Connection(std::vector<Server *> servers,std::pair<int,std::string> 
 	}
 	if (bind(listen_fd,(struct sockaddr *)&host_addr,host_addrlen) != 0)
 	{
-		std::cout << host_port.second.c_str()  << " " << std::endl;
 		perror("webserv(bind)");
 		return ;
 	}
